@@ -25,7 +25,7 @@ for i=1:length(par)
 end
 
 %% Pick a file
-file=1;
+file=3;
 snap = par(file).snap_file;
 raw  = par(file).raw_file;
 
