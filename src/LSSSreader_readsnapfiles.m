@@ -92,21 +92,16 @@ end
 
 %% Generate regions as matlab polygons
 
-% Connector IDs               : D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.connectors.id{j}.Attributes.number
-% Boundary IDs for the region : D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries
-% Layer id                    : D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id
-%
-% The number of connectors and layers should be the same
-
-% D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{1}.Attributes.id
-% D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{1}.Attributes.isupper
-
-% D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary{1}.Attributes.id
-
 % Loop over layers
 for i= 1:length(layerInterpretation.layer)
     % Loop over curved boundaries (and check if they are part of this
-    % layer) and get the connections
+    % layer) and get the connections. The connections variable is the key
+    % for stitching the boundaries together:
+    % The first dimension is the different boundaries for this layer, the
+    % second dimension is:
+    % connections =[curve=1/vertical=2 j=layerindex_in_matlab_structure
+    %               boundary_id start_connector_id end_connector_id]
+    
     connections =[];
     for j=1:length(layerInterpretation.boundaries.curveBoundary)
         if ismember(layerInterpretation.boundaries.curveBoundary(j).id,layerInterpretation.layer(i).curveBoundary)
@@ -124,14 +119,23 @@ for i= 1:length(layerInterpretation.layer)
     % the boundaries forks from a single starting point. I assume that the
     % starting point is the point where there are two equal starting nodes
     % in "connections", i.e. connections(:,3). The following logic peaces
-    % this together and forms the polygon for the layer.
-    
-    nextnode=1; % Let us start on the first line (could be any though)
+    % this together and forms the polygon for the layer by starting at a 
+    % node, and then searching for the next, appending it and then, move 
+    % cycle through the remaing ones.
+    % The structure "connections_sorted" is used to order the boundaries 
+    % such that they form a closed polygon. The first dimension is the
+    % boudnaries (similar to the "connections" variable, and the second
+    % dimension is :
+    % connections_sorted =[curve=1/vertical=2 j=layerindex_in_matlab_structure
+    %               boundary_id start_connector_id end_connector_id forward]
+    % The logic is that the endnode in the first is the either the
+    % startnode (forward==true) or the endnode (forward==false) in the next
+    nextnode=1; % Let us start on the first boundary (could be any)
     exind = 1:size(connections,1);
     forward=true;
     connections_sorted=[];
     for j=1:size(connections,1)
-        % Startingpoint
+        % Find the startingpoint for the boundary
         if forward
             startnode = connections(nextnode,4);
             endnode = connections(nextnode,5);
@@ -139,12 +143,10 @@ for i= 1:length(layerInterpretation.layer)
             startnode = connections(nextnode,5);
             endnode = connections(nextnode,4);
         end
-        
+        % Append the connections_sorted variable
         connections_sorted =[connections_sorted; [connections(nextnode,1:3) startnode endnode forward]];
-        
         % Remove the "used" nodes
         exind(nextnode==exind)=[]; 
-
         % Find the next node in the connections while removeing the "used
         % nodes"
         residualconnections=connections(exind,4:5);
@@ -157,13 +159,14 @@ for i= 1:length(layerInterpretation.layer)
         nextnode=exind(nextnode);
     end
     
-    % Extract the layer polygon
+    % Based on the "connections_sorted" variable the x and y pairs are formed 
+    % for the layer. 
     layer(i).x = [];
     layer(i).y = [];
     for j=1:size(connections_sorted,1)
-        
+        % The matlab ID for the boundary
         matid = connections_sorted(j,2);
-        % If it is vertical boundary 
+        % If it is a vertical boundary 
         if connections_sorted(j,1)==2
             x = [layerInterpretation.boundaries.verticalBoundary(matid).pingOffset layerInterpretation.boundaries.verticalBoundary(matid).pingOffset];
             y = [layerInterpretation.boundaries.verticalBoundary(matid).startDepth layerInterpretation.boundaries.verticalBoundary(matid).endDepth];
@@ -175,23 +178,20 @@ for i= 1:length(layerInterpretation.layer)
             error('No layer coordinates')
         end
         
-        % Backwards??
+        % Does the layer start with the endnode? Then we need to turn the 
+        % direction of the points
         if connections_sorted(j,6)~=1
             x=x(end:-1:1);
             y=y(end:-1:1);
         end
-            
+        % Append to the previous layer
         layer(i).x = [layer(i).x x];
         layer(i).y = [layer(i).y y];
     end
-    
+    % Add information about the layer
     layer(i).fraction  = NaN;
     layer(i).speciesID = NaN;
     layer(i).layertype = 'region';
-%     for k=1:4
-%         plot(x{k},y{k},'-*')
-%     end
-    
 end
 
 %% schoolInterpretation

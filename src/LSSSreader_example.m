@@ -25,7 +25,7 @@ for i=1:length(par)
 end
 
 %% Pick a file
-file=3;
+file=1;
 snap = par(file).snap_file;
 raw  = par(file).raw_file;
 
@@ -50,7 +50,8 @@ cs = pink;
 
 for i=1:length(layer)
     %plot(layer(i).x,layer(i).y)
-    patch(layer(i).x,layer(i).y-td,cs(i,:),'FaceColor',cs(i,:),'FaceAlpha',.1)
+    col = round(interp1(linspace(1,length(layer),size(cs,1)),1:size(cs,1),i));
+    patch(layer(i).x,layer(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
     
 end
 
