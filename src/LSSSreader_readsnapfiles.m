@@ -11,17 +11,28 @@ function [school,layer]=LSSSreader_readsnapfiles(file)
 %% Import the snap file
 D.snap = xml2struct(file);
 
+% Fix a problem where xml2struct doesn't return a cell array if only one
+% item is present. Sort of a hack...
+if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer) == 1
+    l = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer;
+    D.snap.regionInterpretation.layerInterpretation.layerDefinitions = rmfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions, 'layer');
+    D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{1} = l;
+end
+
 %% Get the schoolInterpretation
-nsI= length(D.snap.regionInterpretation.schoolInterpretation.schoolRep);
-for i=1:nsI
-    % The boundary
-    T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
-    dum = str2num(strrep(T,sprintf('\n'),' '));
-    school(i).x = dum(1:2:end-1);
-    school(i).y = dum(2:2:end);
-    school(i).fraction  = NaN;
-    school(i).speciesID = NaN;
-    school(i).regiontype = 'school';
+school = struct([]);
+if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
+    nsI= length(D.snap.regionInterpretation.schoolInterpretation.schoolRep);
+    for i=1:nsI
+        % The boundary
+        T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
+        dum = str2num(strrep(T,sprintf('\n'),' '));
+        school(i).x = dum(1:2:end-1);
+        school(i).y = dum(2:2:end);
+        school(i).fraction  = NaN;
+        school(i).speciesID = NaN;
+        school(i).regiontype = 'school';
+    end
 end
 
 %% Get the layerInterpretation.boundaries.verticalBoundary(ies)
@@ -68,7 +79,11 @@ nL = length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.lay
 for i = 1:nL
     layerInterpretation.layer(i).id   = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id);
     layerInterpretation.layer(i).hasBeenVisisted = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.hasBeenVisisted;
-    layerInterpretation.layer(i).restSpecies= str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.restSpecies);
+    layerInterpretation.layer(i).restSpecies = 0.0; % IS THIS THE RIGHT DEFAULT VALUE????
+    if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}, 'restSpecies')
+        layerInterpretation.layer(i).restSpecies = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.restSpecies);
+    end
+
     
     for j=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary)
         layerInterpretation.layer(i).curveBoundary(j) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
