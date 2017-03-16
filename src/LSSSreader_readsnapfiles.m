@@ -1,8 +1,11 @@
-function layerInterpretation=LSSSreader_readsnapfiles(file)
+function layer=LSSSreader_readsnapfiles(file)
+% Reads the LSSS nap and work files and generates polygons for each region
+% and school
+% 
+% layerInterpretation=LSSSreader_readsnapfiles(file)
 %
-%
-%
-%
+% Input: 
+% file : The data file
 
 
 %% Import the snap file
@@ -55,10 +58,10 @@ for i = 1:nL
     layerInterpretation.layer(i).restSpecies= str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.restSpecies);
     
     for j=1:2
-        if strcmp(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.isUpper,'TRUE')
-            layerInterpretation.layer(i).uppercurveBoundary = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id;
+        if strcmp(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.isUpper,'true')
+            layerInterpretation.layer(i).uppercurveBoundary = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
         else
-            layerInterpretation.layer(i).lowercurveBoundary = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id;
+            layerInterpretation.layer(i).lowercurveBoundary = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
         end
     end
     layerInterpretation.layer(i).verticalBoundary(1) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary{1}.Attributes.id);
@@ -66,17 +69,62 @@ for i = 1:nL
 end
 
 
-%% Generate regions
+%% Generate regions as matlab polygons
 
-%for i= 1:length(layerInterpretation.layer)
+for i= 1:length(layerInterpretation.layer)
+    
+    % Get the boundaries for this layer
+    %vboundaries = [layerInterpretation.layer(i).verticalBoundary(1) layerInterpretation.layer(i).verticalBoundary(2)];
+    
+    % Get the lower boundary
+    for j=1:length(layerInterpretation.boundaries.curveBoundary)
+        if layerInterpretation.boundaries.curveBoundary(j).id==layerInterpretation.layer(i).lowercurveBoundary
+        cboundaries(1)=j;
+        x{1} = (1:layerInterpretation.boundaries.curveBoundary(j).numberOfPings)+layerInterpretation.boundaries.curveBoundary(j).startOffset;
+        y{1} =   layerInterpretation.boundaries.curveBoundary(j).depths;
+        end
+    end
+   
+    % Get the upper boundary
+    for j=1:length(layerInterpretation.boundaries.curveBoundary)
+        if layerInterpretation.boundaries.curveBoundary(j).id==layerInterpretation.layer(i).uppercurveBoundary
+        cboundaries(2)=j;
+        x{2} = (1:layerInterpretation.boundaries.curveBoundary(j).numberOfPings)+layerInterpretation.boundaries.curveBoundary(j).startOffset;
+        y{2} =   layerInterpretation.boundaries.curveBoundary(j).depths;
+
+        
+        end
+    end
+    
+    % Get the vertical boundaries
+    for j=1:length(layerInterpretation.boundaries.verticalBoundary)
+        if layerInterpretation.boundaries.verticalBoundary(j).id==layerInterpretation.layer(i).verticalBoundary(1)
+            vboundaries(1)=j;
+            x{3} = [layerInterpretation.boundaries.verticalBoundary(j).pingOffset layerInterpretation.boundaries.verticalBoundary(j).pingOffset];
+            y{3} = [layerInterpretation.boundaries.verticalBoundary(j).startDepth layerInterpretation.boundaries.verticalBoundary(j).endDepth];
+        end
+        if layerInterpretation.boundaries.verticalBoundary(j).id==layerInterpretation.layer(i).verticalBoundary(2)
+            vboundaries(2)=j;
+            x{4} = [layerInterpretation.boundaries.verticalBoundary(j).pingOffset layerInterpretation.boundaries.verticalBoundary(j).pingOffset];
+            y{4} = [layerInterpretation.boundaries.verticalBoundary(j).startDepth layerInterpretation.boundaries.verticalBoundary(j).endDepth];
+        end
+    end
+    
+    % Patch the boundaries together to one patch
+    layer(i).x = [x{1} x{3}(end:-1:1) x{2}(end:-1:1) x{4}];
+    layer(i).y = [y{1} y{3}(end:-1:1) y{2}(end:-1:1) y{4}];
+    layer(i).fraction  = NaN;
+    layer(i).speciesID = NaN;
+    layer(i).layertype = 'region';
+end
+
+%% schoolInterpretation
+
 %     layer(i).x =
 %     layer(i).y =
 %     layer(i).fraction  =
 %     layer(i).speciesID =
-%end
-
-%% schoolInterpretation
-
+%     layer(i).layertype = 'school'
 
 
 
