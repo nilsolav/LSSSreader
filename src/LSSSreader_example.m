@@ -25,7 +25,7 @@ for i=1:length(par)
 end
 
 %% Pick a file
-file=3;
+for file=1:3
 snap = par(file).snap_file;
 raw  = par(file).raw_file;
 
@@ -48,7 +48,11 @@ td = double(median(raw_data.pings(f).transducerdepth));
 hold on
 cs = cool;
 for i=1:length(layer)
-    col = round(interp1(linspace(1,length(layer),size(cs,1)),1:size(cs,1),i));
+    if length(layer)>1
+        col = round(interp1(linspace(1,length(layer),size(cs,1)),1:size(cs,1),i));
+    else
+        col=1;
+    end
     patch(layer(i).x,layer(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
 end
 
@@ -59,4 +63,4 @@ for i=1:length(school)
 end
 
 
-
+end
