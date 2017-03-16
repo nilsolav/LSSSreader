@@ -1,10 +1,10 @@
 function layer=LSSSreader_readsnapfiles(file)
 % Reads the LSSS nap and work files and generates polygons for each region
 % and school
-% 
+%
 % layerInterpretation=LSSSreader_readsnapfiles(file)
 %
-% Input: 
+% Input:
 % file : The data file
 
 
@@ -57,65 +57,141 @@ for i = 1:nL
     layerInterpretation.layer(i).hasBeenVisisted = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.hasBeenVisisted;
     layerInterpretation.layer(i).restSpecies= str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.restSpecies);
     
-    for j=1:2
-        if strcmp(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.isUpper,'true')
-            layerInterpretation.layer(i).uppercurveBoundary = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
-        else
-            layerInterpretation.layer(i).lowercurveBoundary = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
-        end
+    for j=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary)
+        layerInterpretation.layer(i).curveBoundary(j) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
     end
-    layerInterpretation.layer(i).verticalBoundary(1) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary{1}.Attributes.id);
-    layerInterpretation.layer(i).verticalBoundary(2) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary{2}.Attributes.id);
+    for k=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary)
+        layerInterpretation.layer(i).verticalBoundary(k) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary{k}.Attributes.id);
+    end
+    for k=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.connectors.id)
+        layerInterpretation.layer(i).connectors(k) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.connectors.id{k}.Attributes.number);
+    end
 end
 
+%% Debugging plot section
+if true
+    figure
+    hold on
+    % Plot connectors
+    for j=1:length(layerInterpretation.connector)
+        plot(layerInterpretation.connector(j).pingOffset,layerInterpretation.connector(j).depth,'*r')
+        text(layerInterpretation.connector(j).pingOffset,layerInterpretation.connector(j).depth,num2str(layerInterpretation.connector(j).id))
+    end
+    % Plot curved boundaries
+    for j=1:length(layerInterpretation.boundaries.curveBoundary)
+        t=(1:layerInterpretation.boundaries.curveBoundary(j).numberOfPings)  +layerInterpretation.boundaries.curveBoundary(j).startOffset;
+        plot(t,layerInterpretation.boundaries.curveBoundary(j).depths,'k-')
+    end
+    % Plot vertical boundaries
+    for j=1:length(layerInterpretation.boundaries.verticalBoundary)
+        t=layerInterpretation.boundaries.verticalBoundary(j).pingOffset;
+        cy = [layerInterpretation.boundaries.verticalBoundary(j).startDepth layerInterpretation.boundaries.verticalBoundary(j).endDepth];
+        plot([t t],cy)
+    end
+end
 
 %% Generate regions as matlab polygons
 
-for i= 1:length(layerInterpretation.layer)
-    
-    % Get the boundaries for this layer
-    %vboundaries = [layerInterpretation.layer(i).verticalBoundary(1) layerInterpretation.layer(i).verticalBoundary(2)];
-    
-    % Get the lower boundary
-    for j=1:length(layerInterpretation.boundaries.curveBoundary)
-        if layerInterpretation.boundaries.curveBoundary(j).id==layerInterpretation.layer(i).lowercurveBoundary
-        cboundaries(1)=j;
-        x{1} = (1:layerInterpretation.boundaries.curveBoundary(j).numberOfPings)+layerInterpretation.boundaries.curveBoundary(j).startOffset;
-        y{1} =   layerInterpretation.boundaries.curveBoundary(j).depths;
-        end
-    end
-   
-    % Get the upper boundary
-    for j=1:length(layerInterpretation.boundaries.curveBoundary)
-        if layerInterpretation.boundaries.curveBoundary(j).id==layerInterpretation.layer(i).uppercurveBoundary
-        cboundaries(2)=j;
-        x{2} = (1:layerInterpretation.boundaries.curveBoundary(j).numberOfPings)+layerInterpretation.boundaries.curveBoundary(j).startOffset;
-        y{2} =   layerInterpretation.boundaries.curveBoundary(j).depths;
+% Connector IDs               : D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.connectors.id{j}.Attributes.number
+% Boundary IDs for the region : D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries
+% Layer id                    : D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id
+%
+% The number of connectors and layers should be the same
 
-        
+% D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{1}.Attributes.id
+% D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{1}.Attributes.isupper
+
+% D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary{1}.Attributes.id
+
+% Loop over layers
+for i= 1:length(layerInterpretation.layer)
+    % Loop over curved boundaries (and check if they are part of this
+    % layer) and get the connections
+    connections =[];
+    for j=1:length(layerInterpretation.boundaries.curveBoundary)
+        if ismember(layerInterpretation.boundaries.curveBoundary(j).id,layerInterpretation.layer(i).curveBoundary)
+            connections = [connections;[1 j layerInterpretation.boundaries.curveBoundary(j).id layerInterpretation.boundaries.curveBoundary(j).startConnector layerInterpretation.boundaries.curveBoundary(j).endConnector]];
         end
     end
-    
-    % Get the vertical boundaries
+    % Loop over vertical boundaries (and check if they are part of this
+    % layer) and get the connections
     for j=1:length(layerInterpretation.boundaries.verticalBoundary)
-        if layerInterpretation.boundaries.verticalBoundary(j).id==layerInterpretation.layer(i).verticalBoundary(1)
-            vboundaries(1)=j;
-            x{3} = [layerInterpretation.boundaries.verticalBoundary(j).pingOffset layerInterpretation.boundaries.verticalBoundary(j).pingOffset];
-            y{3} = [layerInterpretation.boundaries.verticalBoundary(j).startDepth layerInterpretation.boundaries.verticalBoundary(j).endDepth];
-        end
-        if layerInterpretation.boundaries.verticalBoundary(j).id==layerInterpretation.layer(i).verticalBoundary(2)
-            vboundaries(2)=j;
-            x{4} = [layerInterpretation.boundaries.verticalBoundary(j).pingOffset layerInterpretation.boundaries.verticalBoundary(j).pingOffset];
-            y{4} = [layerInterpretation.boundaries.verticalBoundary(j).startDepth layerInterpretation.boundaries.verticalBoundary(j).endDepth];
+        if ismember(layerInterpretation.boundaries.verticalBoundary(j).id,layerInterpretation.layer(i).verticalBoundary)
+            connections = [connections;[2 j layerInterpretation.boundaries.verticalBoundary(j).id layerInterpretation.boundaries.verticalBoundary(j).startConnector layerInterpretation.boundaries.verticalBoundary(j).endConnector]];
         end
     end
+    % It seems that the boundary lines do not form a closed circle. Rather
+    % the boundaries forks from a single starting point. I assume that the
+    % starting point is the point where there are two equal starting nodes
+    % in "connections", i.e. connections(:,3). The following logic peaces
+    % this together and forms the polygon for the layer.
     
-    % Patch the boundaries together to one patch
-    layer(i).x = [x{1} x{3}(end:-1:1) x{2}(end:-1:1) x{4}];
-    layer(i).y = [y{1} y{3}(end:-1:1) y{2}(end:-1:1) y{4}];
+    nextnode=1; % Let us start on the first line (could be any though)
+    exind = 1:size(connections,1);
+    forward=true;
+    connections_sorted=[];
+    for j=1:size(connections,1)
+        % Startingpoint
+        if forward
+            startnode = connections(nextnode,4);
+            endnode = connections(nextnode,5);
+        else
+            startnode = connections(nextnode,5);
+            endnode = connections(nextnode,4);
+        end
+        
+        connections_sorted =[connections_sorted; [connections(nextnode,1:3) startnode endnode forward]];
+        
+        % Remove the "used" nodes
+        exind(nextnode==exind)=[]; 
+
+        % Find the next node in the connections while removeing the "used
+        % nodes"
+        residualconnections=connections(exind,4:5);
+        ind =  residualconnections == endnode;
+        % change "direction"?
+        if sum(ind(:,2))>0
+            forward = false;
+        end
+        nextnode = find(ind(:,1)|ind(:,2));
+        nextnode=exind(nextnode);
+    end
+    
+    % Extract the layer polygon
+    layer(i).x = [];
+    layer(i).y = [];
+    for j=1:size(connections_sorted,1)
+        
+        matid = connections_sorted(j,2);
+        % If it is vertical boundary 
+        if connections_sorted(j,1)==2
+            x = [layerInterpretation.boundaries.verticalBoundary(matid).pingOffset layerInterpretation.boundaries.verticalBoundary(matid).pingOffset];
+            y = [layerInterpretation.boundaries.verticalBoundary(matid).startDepth layerInterpretation.boundaries.verticalBoundary(matid).endDepth];
+        elseif connections_sorted(j,1)==1
+            % if it is a curved layer
+            x = (1:layerInterpretation.boundaries.curveBoundary(matid).numberOfPings) + layerInterpretation.boundaries.curveBoundary(matid).startOffset;
+            y = layerInterpretation.boundaries.curveBoundary(matid).depths;
+        else
+            error('No layer coordinates')
+        end
+        
+        % Backwards??
+        if connections_sorted(j,6)~=1
+            x=x(end:-1:1);
+            y=y(end:-1:1);
+        end
+            
+        layer(i).x = [layer(i).x x];
+        layer(i).y = [layer(i).y y];
+    end
+    
     layer(i).fraction  = NaN;
     layer(i).speciesID = NaN;
     layer(i).layertype = 'region';
+%     for k=1:4
+%         plot(x{k},y{k},'-*')
+%     end
+    
 end
 
 %% schoolInterpretation
