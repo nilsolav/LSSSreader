@@ -30,7 +30,7 @@ snap = par(file).snap_file;
 raw  = par(file).raw_file;
 
 %% Read snap file
-layer = LSSSreader_readsnapfiles(snap);
+[school,layer] = LSSSreader_readsnapfiles(snap);
 
 %% Read raw file and convert to sv
 [raw_header,raw_data] = readEKRaw(raw);
@@ -44,17 +44,19 @@ td = double(median(raw_data.pings(f).transducerdepth));
 %% Plot result
 [fh, ih] = readEKRaw_SimpleEchogram(Sv.pings(f).Sv, 1:length(Sv.pings(f).time), Sv.pings(f).range);
 
-%% Plot the interpretation mask
+% Plot the interpretation mask
 hold on
-cs = pink;
-
+cs = cool;
 for i=1:length(layer)
-    %plot(layer(i).x,layer(i).y)
     col = round(interp1(linspace(1,length(layer),size(cs,1)),1:size(cs,1),i));
     patch(layer(i).x,layer(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
-    
 end
 
+cs = hot;
+for i=1:length(school)
+    col = round(interp1(linspace(1,length(school),size(cs,1)),1:size(cs,1),i));
+    patch(school(i).x,school(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
+end
 
 
 

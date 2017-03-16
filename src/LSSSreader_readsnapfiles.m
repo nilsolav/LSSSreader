@@ -1,4 +1,4 @@
-function layer=LSSSreader_readsnapfiles(file)
+function [school,layer]=LSSSreader_readsnapfiles(file)
 % Reads the LSSS nap and work files and generates polygons for each region
 % and school
 %
@@ -10,6 +10,19 @@ function layer=LSSSreader_readsnapfiles(file)
 
 %% Import the snap file
 D.snap = xml2struct(file);
+
+%% Get the schoolInterpretation
+nsI= length(D.snap.regionInterpretation.schoolInterpretation.schoolRep);
+for i=1:nsI
+    % The boundary
+    T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
+    dum = str2num(strrep(T,sprintf('\n'),' '));
+    school(i).x = dum(1:2:end-1);
+    school(i).y = dum(2:2:end);
+    school(i).fraction  = NaN;
+    school(i).speciesID = NaN;
+    school(i).regiontype = 'school';
+end
 
 %% Get the layerInterpretation.boundaries.verticalBoundary(ies)
 nvB= length(D.snap.regionInterpretation.layerInterpretation.boundaries.verticalBoundary);
@@ -191,7 +204,7 @@ for i= 1:length(layerInterpretation.layer)
     % Add information about the layer
     layer(i).fraction  = NaN;
     layer(i).speciesID = NaN;
-    layer(i).layertype = 'region';
+    layer(i).regiontype = 'region';
 end
 
 %% schoolInterpretation
