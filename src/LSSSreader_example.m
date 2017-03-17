@@ -4,12 +4,22 @@ if ~strcmp(user, 'gavinj')
     clear
     close all
     clc
+else
+    warning('I must ensure that I do not amuse my self too much. Not healthy.')
 end
-
-%% Get the paths to the test data
 
 whr = which('LSSSreader_readsnapfiles');
 [dr,~,~] = fileparts(whr);
+
+directory(1).snap_dir = fullfile(dr,'/../exampledata/S2006101/');
+directory(2).snap_dir = fullfile(dr,'/../exampledata/S2016837/');
+directory(3).snap_dir = fullfile(dr,'/../exampledata/S2005114/');
+
+d=LSSSreader_pairfiles(directory);
+
+
+%% Get the paths to the test data
+
 
 par(1).raw_file  = fullfile(dr,'/../exampledata/S2006101/tokt2006101-D20060124-T030844.raw');
 par(1).snap_file = fullfile(dr,'/../exampledata/S2006101/tokt2006101-D20060124-T030844.work');
