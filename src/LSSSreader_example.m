@@ -1,7 +1,10 @@
-%% clean slate
-clear
-close all
-clc
+%% clean slate for some of us
+user = char(java.lang.System.getProperty('user.name'));
+if ~strcmp(user, 'gavinj')
+    clear
+    close all
+    clc
+end
 
 %% Get the paths to the test data
 
@@ -39,6 +42,9 @@ Sv = readEKRaw_Power2Sv(raw_data,raw_cal);
 
 % Get the transducer depth
 f=1;
+if length(raw_data.pings) > 1
+    f=2; % Use 38 kHz if we can (which is usually channel 2 on IMR ships)
+end
 td = double(median(raw_data.pings(f).transducerdepth));
 
 %% Plot result
