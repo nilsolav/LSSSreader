@@ -20,6 +20,10 @@ par(2).snap_file = fullfile(dr,'/../exampledata/S2016837/2016837-D20160503-T0935
 par(3).raw_file  = fullfile(dr,'/../exampledata/S2005114/tokt2005114-D20051118-T062010.raw');
 par(3).snap_file  = fullfile(dr,'/../exampledata/S2005114/tokt2005114-D20051118-T062010.snap');
 
+% Example with two types of erased region and an exclude region
+par(4).raw_file  = fullfile(dr,'/../exampledata/S2014119/2014119-D20141029-T172311.raw');
+par(4).snap_file  = fullfile(dr,'/../exampledata/S2014119/2014119-D20141029-T172311.work');
+
 
 for i=1:length(par)
     if ~exist(par(i).raw_file)|~exist(par(i).snap_file)
@@ -28,7 +32,7 @@ for i=1:length(par)
 end
 
 %% Pick a file
-for file=1:3
+for file=1:4
 snap = par(file).snap_file;
 raw  = par(file).raw_file;
 
