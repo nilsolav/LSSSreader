@@ -19,6 +19,31 @@ if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer
     D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{1} = l;
 end
 
+%% Get the excluded ping ranges
+exclude = [];
+if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
+    timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
+    nsE = length(timeRange);
+    for i = 1:nsE
+        exclude(i).startTime = timeRange{i}.Attributes.start; %#ok<*AGROW>
+        exclude(i).numOfPings = timeRange{i}.Attributes.numberOfPings;
+    end
+end
+
+%% Get the erased masks
+if isfield(D.snap.regionInterpretation, 'masking')
+    referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
+    nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
+    for i = 1:nsM
+        mask = D.snap.regionInterpretation.masking.mask{i};
+        for j = 1:length(mask.ping)
+            channelID = mask.Attributes.channelID;
+            pingOffset = mask.ping{j}.Attributes.pingOffset;
+            vertices = str2num(mask.ping{j}.Text);
+        end
+    end
+end
+
 %% Get the schoolInterpretation
 school = struct([]);
 if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
@@ -26,7 +51,7 @@ if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
     for i=1:nsI
         % The boundary
         T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
-        dum = str2num(strrep(T,newline,' '));
+        dum = str2num(strrep(T,newline,' ')); %#ok<ST2NM>
         school(i).x = dum(1:2:end-1);
         school(i).y = dum(2:2:end);
         school(i).fraction  = NaN;
@@ -61,7 +86,7 @@ for i = 1:ncB
     layerInterpretation.boundaries.curveBoundary(i).referenceTime  = str2double(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.pingRange.Attributes.referenceTime);
     layerInterpretation.boundaries.curveBoundary(i).startOffset    = str2double(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.pingRange.Attributes.startOffset);
     layerInterpretation.boundaries.curveBoundary(i).numberOfPings  = str2double(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.pingRange.Attributes.numberOfPings);
-    layerInterpretation.boundaries.curveBoundary(i).depths = str2num(strrep(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.depths.Text,sprintf('\n'),' '));
+    layerInterpretation.boundaries.curveBoundary(i).depths = str2num(strrep(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.depths.Text,newline,' ')); %#ok<*ST2NM>
 end
 
 % Get the layerInterpretation.connector (s)
