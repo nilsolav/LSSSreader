@@ -53,7 +53,7 @@ if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
     for i=1:nsI
         % The boundary
         T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
-        dum = str2num(strrep(T,newline,' ')); %#ok<ST2NM>
+        dum = str2num(strrep(T,newline,' ')); 
         school(i).x = dum(1:2:end-1);
         school(i).y = dum(2:2:end);
         school(i).fraction  = NaN;
