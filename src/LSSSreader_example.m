@@ -4,6 +4,8 @@ if ~strcmp(user, 'gavinj')
     clear
     close all
     clc
+else
+    warning('I must ensure that I do not amuse my self too much. Not healthy.')
 end
 
 whr = which('LSSSreader_readsnapfiles');
