@@ -26,7 +26,7 @@ if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
     for i=1:nsI
         % The boundary
         T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
-        dum = str2num(strrep(T,sprintf('\n'),' '));
+        dum = str2num(strrep(T,newline,' '));
         school(i).x = dum(1:2:end-1);
         school(i).y = dum(2:2:end);
         school(i).fraction  = NaN;
@@ -277,7 +277,7 @@ else
     if (exist(file,'file') == 0)
         %Perhaps the xml extension was omitted from the file name. Add the
         %extension and try again.
-        if (isempty(strfind(file,'.xml')))
+        if (~contains(file,'.xml'))
             file = [file '.xml'];
         end
         
