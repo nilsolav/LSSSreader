@@ -25,8 +25,9 @@ if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
     timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
     nsE = length(timeRange);
     for i = 1:nsE
-        exclude(i).startTime = timeRange{i}.Attributes.start; %#ok<*AGROW>
-        exclude(i).numOfPings = timeRange{i}.Attributes.numberOfPings;
+        t = str2double(timeRange{i}.Attributes.start);
+        exclude(i).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
+        exclude(i).numOfPings = str2double(timeRange{i}.Attributes.numberOfPings);
     end
 end
 
@@ -251,16 +252,11 @@ for i= 1:length(layerInterpretation.layer)
     layer(i).regiontype = 'region';
 end
 
-%% schoolInterpretation
+end
 
-%     layer(i).x =
-%     layer(i).y =
-%     layer(i).fraction  =
-%     layer(i).speciesID =
-%     layer(i).layertype = 'school'
-
-
-
+function t = unixTimeToMatlab(tt)
+    %  convert Java time numer to MATLAB serial time
+    t = tt / 86400 + datenum(1970, 1, 1);
 end
 
 function [ s ] = xml2struct( file )

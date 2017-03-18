@@ -82,5 +82,18 @@ for i=1:length(school)
     patch(school(i).x,school(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
 end
 
+% Plot erased regions
+
+% Plot exclude regions
+maxRange = max(Sv.pings(f).range);
+for i=1:length(exclude)
+    % Find the ping that matches the start time
+    [~, startPing] = min(abs(exclude(i).startTime - Sv.pings(f).time));    
+    endPing = startPing + exclude(i).numOfPings;
+    patch([startPing startPing endPing endPing], ...
+        [0 maxRange maxRange 0], 'k', 'FaceAlpha', 0.7)
+    
+end
+
 
 end
