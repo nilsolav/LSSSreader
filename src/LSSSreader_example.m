@@ -87,12 +87,10 @@ end
 % Plot exclude regions
 maxRange = max(Sv.pings(f).range);
 for i=1:length(exclude)
-    % Find the ping that matches the start time
     [~, startPing] = min(abs(exclude(i).startTime - Sv.pings(f).time));    
     endPing = startPing + exclude(i).numOfPings;
     patch([startPing startPing endPing endPing], ...
-        [0 maxRange maxRange 0], 'k', 'FaceAlpha', 0.7)
-    
+        [0 maxRange maxRange 0], 'k', 'FaceAlpha', 0.7) 
 end
 
 
