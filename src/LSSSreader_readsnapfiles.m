@@ -1,4 +1,4 @@
-function [school,layer]=LSSSreader_readsnapfiles(file)
+function [school,layer,exclude,erased]=LSSSreader_readsnapfiles(file)
 % Reads the LSSS nap and work files and generates polygons for each region
 % and school
 %
@@ -20,7 +20,7 @@ if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer
 end
 
 %% Get the excluded ping ranges
-exclude = [];
+clear('exclude')
 if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
     timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
     nsE = length(timeRange);
@@ -31,17 +31,19 @@ if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
 end
 
 %% Get the erased masks
-clear mask
+% Generates a structure called 'erased'. For each named ping, there is one
+% or more depth ranges that are to be erased.
+clear('erased')
 if isfield(D.snap.regionInterpretation, 'masking')
-    mask.referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
+    erased.referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
     nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
     for i = 1:nsM
         m = D.snap.regionInterpretation.masking.mask{i};
-        mask.channel(i).channelID = m.Attributes.channelID;
+        erased.channel(i).channelID = m.Attributes.channelID;
         for j = 1:length(m.ping)
-            mask.channel(i).pingOffset(j) = str2double(m.ping{j}.Attributes.pingOffset);
+            erased.channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
             ranges = str2num(m.ping{j}.Text);
-            mask.channel(i).depthRanges{j} = reshape(ranges, 2, [])';
+            erased.channel(i).y{j} = reshape(ranges, 2, [])';
         end
     end
 end
@@ -106,7 +108,7 @@ nL = length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.lay
 for i = 1:nL
     layerInterpretation.layer(i).id   = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id);
     layerInterpretation.layer(i).hasBeenVisisted = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.hasBeenVisisted;
-    layerInterpretation.layer(i).restSpecies = 0.0; % IS THIS THE RIGHT DEFAULT VALUE????
+    layerInterpretation.layer(i).restSpecies = 0.0; % IS THIS THE RIGHT DEFAULT VALUE when restSpecies is not in the XML????
     if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}, 'restSpecies')
         layerInterpretation.layer(i).restSpecies = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.restSpecies);
     end

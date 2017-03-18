@@ -47,7 +47,7 @@ snap = par(file).snap_file;
 raw  = par(file).raw_file;
 
 %% Read snap file
-[school,layer] = LSSSreader_readsnapfiles(snap);
+[school,layer,exclude,erased] = LSSSreader_readsnapfiles(snap);
 
 %% Read raw file and convert to sv
 [raw_header,raw_data] = readEKRaw(raw);
