@@ -24,10 +24,16 @@ exclude = struct([]);
 if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
     timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
     nsE = length(timeRange);
-    for i = 1:nsE
-        t = str2double(timeRange{i}.Attributes.start);
-        exclude(i).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
-        exclude(i).numOfPings = str2double(timeRange{i}.Attributes.numberOfPings);
+    if length(nsE)==1
+        t = str2double(timeRange.Attributes.start);
+        exclude(1).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
+        exclude(1).numOfPings = str2double(timeRange.Attributes.numberOfPings);
+    else
+        for i = 1:nsE
+            t = str2double(timeRange{i}.Attributes.start);
+            exclude(i).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
+            exclude(i).numOfPings = str2double(timeRange{i}.Attributes.numberOfPings);
+        end
     end
 end
 
@@ -39,13 +45,24 @@ if isfield(D.snap.regionInterpretation, 'masking')
     if isfield(D.snap.regionInterpretation.masking, 'mask')
         erased(1).referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
         nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
-        for i = 1:nsM
-            m = D.snap.regionInterpretation.masking.mask{i};
+        if length(nsM)==1
+            i=1;
+            m = D.snap.regionInterpretation.masking.mask;
             erased(1).channel(i).channelID = m.Attributes.channelID;
             for j = 1:length(m.ping)
                 erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
                 ranges = str2num(m.ping{j}.Text);
                 erased(1).channel(i).y{j} = reshape(ranges, 2, [])';
+            end
+        else
+            for i = 1:nsM
+                m = D.snap.regionInterpretation.masking.mask{i};
+                erased(1).channel(i).channelID = m.Attributes.channelID;
+                for j = 1:length(m.ping)
+                    erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
+                    ranges = str2num(m.ping{j}.Text);
+                    erased(1).channel(i).y{j} = reshape(ranges, 2, [])';
+                end
             end
         end
     end
@@ -57,7 +74,7 @@ if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
     for i=1:nsI
         % The boundary
         T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
-        dum = str2num(strrep(T,newline,' ')); 
+        dum = str2num(strrep(T,newline,' '));
         school(i).x = dum(1:2:end-1);
         school(i).y = dum(2:2:end);
         school(i).fraction  = NaN;
@@ -114,7 +131,7 @@ for i = 1:nL
     if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}, 'restSpecies')
         layerInterpretation.layer(i).restSpecies = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.restSpecies);
     end
-
+    
     
     for j=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary)
         layerInterpretation.layer(i).curveBoundary(j) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
@@ -178,10 +195,10 @@ for i= 1:length(layerInterpretation.layer)
     % the boundaries forks from a single starting point. I assume that the
     % starting point is the point where there are two equal starting nodes
     % in "connections", i.e. connections(:,3). The following logic peaces
-    % this together and forms the polygon for the layer by starting at a 
-    % node, and then searching for the next, appending it and then, move 
+    % this together and forms the polygon for the layer by starting at a
+    % node, and then searching for the next, appending it and then, move
     % cycle through the remaing ones.
-    % The structure "connections_sorted" is used to order the boundaries 
+    % The structure "connections_sorted" is used to order the boundaries
     % such that they form a closed polygon. The first dimension is the
     % boudnaries (similar to the "connections" variable, and the second
     % dimension is :
@@ -205,7 +222,7 @@ for i= 1:length(layerInterpretation.layer)
         % Append the connections_sorted variable
         connections_sorted =[connections_sorted; [connections(nextnode,1:3) startnode endnode forward]];
         % Remove the "used" nodes
-        exind(nextnode==exind)=[]; 
+        exind(nextnode==exind)=[];
         % Find the next node in the connections while removeing the "used
         % nodes"
         residualconnections=connections(exind,4:5);
@@ -218,14 +235,14 @@ for i= 1:length(layerInterpretation.layer)
         nextnode=exind(nextnode);
     end
     
-    % Based on the "connections_sorted" variable the x and y pairs are formed 
-    % for the layer. 
+    % Based on the "connections_sorted" variable the x and y pairs are formed
+    % for the layer.
     layer(i).x = [];
     layer(i).y = [];
     for j=1:size(connections_sorted,1)
         % The matlab ID for the boundary
         matid = connections_sorted(j,2);
-        % If it is a vertical boundary 
+        % If it is a vertical boundary
         if connections_sorted(j,1)==2
             x = [layerInterpretation.boundaries.verticalBoundary(matid).pingOffset layerInterpretation.boundaries.verticalBoundary(matid).pingOffset];
             y = [layerInterpretation.boundaries.verticalBoundary(matid).startDepth layerInterpretation.boundaries.verticalBoundary(matid).endDepth];
@@ -237,7 +254,7 @@ for i= 1:length(layerInterpretation.layer)
             error('No layer coordinates')
         end
         
-        % Does the layer start with the endnode? Then we need to turn the 
+        % Does the layer start with the endnode? Then we need to turn the
         % direction of the points
         if connections_sorted(j,6)~=1
             x=x(end:-1:1);
@@ -256,8 +273,8 @@ end
 end
 
 function t = unixTimeToMatlab(tt)
-    %  convert Java time numer to MATLAB serial time
-    t = tt / 86400 + datenum(1970, 1, 1);
+%  convert Java time numer to MATLAB serial time
+t = tt / 86400 + datenum(1970, 1, 1);
 end
 
 function [ s ] = xml2struct( file )
