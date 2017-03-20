@@ -20,7 +20,6 @@ if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer
 end
 
 %% Get the excluded ping ranges
-%clear('exclude') You need to output an empty variable!
 exclude = struct([]);
 if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
     timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
@@ -35,24 +34,22 @@ end
 %% Get the erased masks
 % Generates a structure called 'erased'. For each named ping, there is one
 % or more depth ranges that are to be erased.
-%clear('erased')
 erased = struct([]);
 if isfield(D.snap.regionInterpretation, 'masking')
     if isfield(D.snap.regionInterpretation.masking, 'mask')
-        erased.referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
+        erased(1).referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
         nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
         for i = 1:nsM
             m = D.snap.regionInterpretation.masking.mask{i};
-            erased.channel(i).channelID = m.Attributes.channelID;
+            erased(1).channel(i).channelID = m.Attributes.channelID;
             for j = 1:length(m.ping)
-                erased.channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
+                erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
                 ranges = str2num(m.ping{j}.Text);
-                erased.channel(i).y{j} = reshape(ranges, 2, [])';
+                erased(1).channel(i).y{j} = reshape(ranges, 2, [])';
             end
         end
     end
 end
-
 %% Get the schoolInterpretation
 school = struct([]);
 if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
