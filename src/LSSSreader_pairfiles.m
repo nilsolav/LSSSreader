@@ -10,7 +10,7 @@ function files=LSSSreader_pairfiles(files)
 % files.raw  : rawfiles list (output from "rdir")
 %
 % Output:
-% files.F       : List of unique files.
+% files.F       : List of unique file combinations.
 % files.F{i,1}  : Full path to snap file
 % files.F{i,2}  : Full path to work file
 % files.F{i,3}  : Full path to raw file
