@@ -1,56 +1,40 @@
-function directory=LSSSreader_pairfiles(directory)
+function files=LSSSreader_pairfiles(files)
 %
-% this function lists pairs of snap, work and raw files from multiple
-% directories. If only the snapdir is given it assumes that all files are
-% in the same directory.
+% this function pair snap, work and raw files from the files in the file
+% list directories. 
 %
 % Input:
-% directory(i)          : Directory j where the files are located
-% directory(i).snap_dir : The location of the snap files
-% directory(i).work_dir : The location of the work files (optional)
-% directory(i).raw_dir  : The location of the raw files (optional)
+% files      : Input files
+% files.snap : snapfile list (output from "rdir")
+% files.work : workfiles list (output from "rdir")
+% files.raw  : rawfiles list (output from "rdir")
 %
 % Output:
-% directory(i).files{j,1}  : full path to snapfile
-% directory(i).files{j,2}  : full path to workfil
-% directory(i).files{j,3}  : full path EK raw file
+% files.F       : List of unique files.
+% files.F{i,1}  : Full path to snap file
+% files.F{i,2}  : Full path to work file
+% files.F{i,3}  : Full path to raw file
+%
+% The function returns empty if the snap, work or raw file is missing
+%
+% The function does not handle multiple files with same name in different
+% folders.
+%
 
-% Loop over direcotries
-for i=1:length(directory)
-    
-    % Get the snapfile
-    snap = dir(fullfile(directory(i).snap_dir,'*.snap'));
-    
-    % Get the workfiles
-    if isfield('work_dir',directory)
-        work = dir(fullfile(directory(i).work_dir,'*.work'));
-    else
-        work = dir(fullfile(directory(i).snap_dir,'*.work'));
-    end
-    
-    % Get the raw files
-    if isfield('raw_dir',directory)
-        raw = dir(fullfile(directory(i).raw_dir,'*.raw'));
-    else
-        raw = dir(fullfile(directory(i).snap_dir,'*.raw'));
-    end
-    
-    % Combine the files
-    k = 1;
-    N = max([length(raw) length(snap) length(work)]);
-    files={};
-    files=combinefiles(files,snap,1);
-    files=combinefiles(files,work,2);
-    files=combinefiles(files,raw,3);
-    directory(i).files = files;
-end
 
+% Combine the files
+k = 1;
+F={};
+F=combinefiles(F,files.snap,1);
+F=combinefiles(F,files.work,2);
+F=combinefiles(F,files.raw,3);
+files.F=F;
 
 function files0 = combinefiles(files0,files,fp)
 % List
 s=size(files0);
 for i=1:length(files)
-    file = fullfile(files(i).folder,files(i).name);
+    file = fullfile(files(i).name);
     [~,filemain,~] = fileparts(file);
     % does the file already exist?
     ex = false;

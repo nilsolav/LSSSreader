@@ -97,7 +97,7 @@ for i = 1:nL
 end
 
 %% Debugging plot section
-if true
+if false
     figure
     hold on
     % Plot connectors
