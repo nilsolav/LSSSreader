@@ -36,8 +36,8 @@ end
 % or more depth ranges that are to be erased.
 clear('erased')
 if isfield(D.snap.regionInterpretation, 'masking')
-    erased.referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
     if isfield(D.snap.regionInterpretation.masking, 'mask')
+        erased.referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
         nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
         for i = 1:nsM
             m = D.snap.regionInterpretation.masking.mask{i};
