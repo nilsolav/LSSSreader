@@ -20,7 +20,8 @@ if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer
 end
 
 %% Get the excluded ping ranges
-clear('exclude')
+%clear('exclude') You need to output an empty variable!
+exclude = struct([]);
 if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
     timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
     nsE = length(timeRange);
@@ -34,7 +35,8 @@ end
 %% Get the erased masks
 % Generates a structure called 'erased'. For each named ping, there is one
 % or more depth ranges that are to be erased.
-clear('erased')
+%clear('erased')
+erased = struct([]);
 if isfield(D.snap.regionInterpretation, 'masking')
     if isfield(D.snap.regionInterpretation.masking, 'mask')
         erased.referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
