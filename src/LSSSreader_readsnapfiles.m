@@ -19,21 +19,21 @@ if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer
     D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{1} = l;
 end
 
+if length(D.snap.regionInterpretation.masking.mask) == 1
+    m = D.snap.regionInterpretation.masking.mask;
+    D.snap.regionInterpretation.masking = rmfield(D.snap.regionInterpretation.masking, 'mask');
+    D.snap.regionInterpretation.masking.mask{1} = m;
+end
+
 %% Get the excluded ping ranges
 exclude = struct([]);
 if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
     timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
     nsE = length(timeRange);
-    if length(nsE)==1
-        t = str2double(timeRange.Attributes.start);
-        exclude(1).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
-        exclude(1).numOfPings = str2double(timeRange.Attributes.numberOfPings);
-    else
-        for i = 1:nsE
-            t = str2double(timeRange{i}.Attributes.start);
-            exclude(i).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
-            exclude(i).numOfPings = str2double(timeRange{i}.Attributes.numberOfPings);
-        end
+    for i = 1:nsE
+        t = str2double(timeRange{i}.Attributes.start);
+        exclude(i).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
+        exclude(i).numOfPings = str2double(timeRange{i}.Attributes.numberOfPings);
     end
 end
 
@@ -45,24 +45,13 @@ if isfield(D.snap.regionInterpretation, 'masking')
     if isfield(D.snap.regionInterpretation.masking, 'mask')
         erased(1).referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
         nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
-        if length(nsM)==1
-            i=1;
-            m = D.snap.regionInterpretation.masking.mask;
+        for i = 1:nsM
+            m = D.snap.regionInterpretation.masking.mask{i};
             erased(1).channel(i).channelID = str2double(m.Attributes.channelID);
             for j = 1:length(m.ping)
                 erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
                 ranges = str2num(m.ping{j}.Text);
                 erased(1).channel(i).y{j} = reshape(ranges, 2, [])';
-            end
-        else
-            for i = 1:nsM
-                m = D.snap.regionInterpretation.masking.mask{i};
-                erased(1).channel(i).channelID = str2double(m.Attributes.channelID);
-                for j = 1:length(m.ping)
-                    erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
-                    ranges = str2num(m.ping{j}.Text);
-                    erased(1).channel(i).y{j} = reshape(ranges, 2, [])';
-                end
             end
         end
     end
