@@ -61,15 +61,18 @@ for file=3%1:size(files.F,1)
     
     % Plot erased regions
     if ~isempty(erased)
-        for i=1:length(erased.channel(f).x) % loop over each ping with erased samples
-            ping = erased.channel(f).x(i);
-            ranges = erased.channel(f).y{i};
-            for j=1:size(ranges,1) % loop over each contingous block of erased samples
-                startR = ranges(j,1);
-                endR = startR + ranges(j,2);
-                patch([ping ping+1 ping+1 ping], ...
-                    [startR startR endR endR]-td, 'k', ...
-                    'FaceAlpha', 0.8, 'EdgeColor', 'None')
+        k = find(f == [erased.channel.channelID]); % erased data for channel f.
+        if ~isempty(k == 1)
+            for i=1:length(erased.channel(k).x) % loop over each ping with erased samples
+                ping = erased.channel(k).x(i);
+                ranges = erased.channel(k).y{i};
+                for j=1:size(ranges,1) % loop over each contingous block of erased samples
+                    startR = ranges(j,1);
+                    endR = startR + ranges(j,2);
+                    patch([ping ping+1 ping+1 ping], ...
+                        [startR startR endR endR]-td, 'k', ...
+                        'FaceAlpha', 0.8, 'EdgeColor', 'None')
+                end
             end
         end
     end
