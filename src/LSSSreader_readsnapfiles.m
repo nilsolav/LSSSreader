@@ -1,4 +1,4 @@
-function [school,layer]=LSSSreader_readsnapfiles(file)
+function [school,layer,exclude,erased]=LSSSreader_readsnapfiles(file)
 % Reads the LSSS nap and work files and generates polygons for each region
 % and school
 %
@@ -19,6 +19,36 @@ if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer
     D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{1} = l;
 end
 
+%% Get the excluded ping ranges
+clear('exclude')
+if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
+    timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
+    nsE = length(timeRange);
+    for i = 1:nsE
+        t = str2double(timeRange{i}.Attributes.start);
+        exclude(i).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
+        exclude(i).numOfPings = str2double(timeRange{i}.Attributes.numberOfPings);
+    end
+end
+
+%% Get the erased masks
+% Generates a structure called 'erased'. For each named ping, there is one
+% or more depth ranges that are to be erased.
+clear('erased')
+if isfield(D.snap.regionInterpretation, 'masking')
+    erased.referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
+    nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
+    for i = 1:nsM
+        m = D.snap.regionInterpretation.masking.mask{i};
+        erased.channel(i).channelID = m.Attributes.channelID;
+        for j = 1:length(m.ping)
+            erased.channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
+            ranges = str2num(m.ping{j}.Text);
+            erased.channel(i).y{j} = reshape(ranges, 2, [])';
+        end
+    end
+end
+
 %% Get the schoolInterpretation
 school = struct([]);
 if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
@@ -26,7 +56,7 @@ if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
     for i=1:nsI
         % The boundary
         T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
-        dum = str2num(strrep(T,newline,' '));
+        dum = str2num(strrep(T,newline,' ')); 
         school(i).x = dum(1:2:end-1);
         school(i).y = dum(2:2:end);
         school(i).fraction  = NaN;
@@ -61,7 +91,7 @@ for i = 1:ncB
     layerInterpretation.boundaries.curveBoundary(i).referenceTime  = str2double(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.pingRange.Attributes.referenceTime);
     layerInterpretation.boundaries.curveBoundary(i).startOffset    = str2double(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.pingRange.Attributes.startOffset);
     layerInterpretation.boundaries.curveBoundary(i).numberOfPings  = str2double(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.pingRange.Attributes.numberOfPings);
-    layerInterpretation.boundaries.curveBoundary(i).depths = str2num(strrep(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.depths.Text,sprintf('\n'),' '));
+    layerInterpretation.boundaries.curveBoundary(i).depths = str2num(strrep(D.snap.regionInterpretation.layerInterpretation.boundaries.curveBoundary{i}.curveRep.depths.Text,newline,' ')); %#ok<*ST2NM>
 end
 
 % Get the layerInterpretation.connector (s)
@@ -79,7 +109,7 @@ nL = length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.lay
 for i = 1:nL
     layerInterpretation.layer(i).id   = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id);
     layerInterpretation.layer(i).hasBeenVisisted = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.hasBeenVisisted;
-    layerInterpretation.layer(i).restSpecies = 0.0; % IS THIS THE RIGHT DEFAULT VALUE????
+    layerInterpretation.layer(i).restSpecies = 0.0; % IS THIS THE RIGHT DEFAULT VALUE when restSpecies is not in the XML????
     if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}, 'restSpecies')
         layerInterpretation.layer(i).restSpecies = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.restSpecies);
     end
@@ -222,16 +252,11 @@ for i= 1:length(layerInterpretation.layer)
     layer(i).regiontype = 'region';
 end
 
-%% schoolInterpretation
+end
 
-%     layer(i).x =
-%     layer(i).y =
-%     layer(i).fraction  =
-%     layer(i).speciesID =
-%     layer(i).layertype = 'school'
-
-
-
+function t = unixTimeToMatlab(tt)
+    %  convert Java time numer to MATLAB serial time
+    t = tt / 86400 + datenum(1970, 1, 1);
 end
 
 function [ s ] = xml2struct( file )

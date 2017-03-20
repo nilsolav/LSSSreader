@@ -47,7 +47,7 @@ snap = par(file).snap_file;
 raw  = par(file).raw_file;
 
 %% Read snap file
-[school,layer] = LSSSreader_readsnapfiles(snap);
+[school,layer,exclude,erased] = LSSSreader_readsnapfiles(snap);
 
 %% Read raw file and convert to sv
 [raw_header,raw_data] = readEKRaw(raw);
@@ -80,6 +80,28 @@ cs = hot;
 for i=1:length(school)
     col = round(interp1(linspace(1,length(school),size(cs,1)),1:size(cs,1),i));
     patch(school(i).x,school(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
+end
+
+% Plot erased regions
+for i=1:length(erased.channel(f).x) % loop over each ping with erased samples
+    ping = erased.channel(f).x(i);
+    ranges = erased.channel(f).y{i};
+    for j=1:size(ranges,1) % loop over each contingous block of erased samples
+        startR = ranges(j,1);
+        endR = startR + ranges(j,2);
+        patch([ping ping+1 ping+1 ping], ...
+              [startR startR endR endR]-td, 'k', ...
+            'FaceAlpha', 0.8, 'EdgeColor', 'None')
+    end
+end
+
+% Plot exclude regions
+maxRange = max(Sv.pings(f).range);
+for i=1:length(exclude)
+    [~, startPing] = min(abs(exclude(i).startTime - Sv.pings(f).time));    
+    endPing = startPing + exclude(i).numOfPings;
+    patch([startPing startPing endPing endPing], ...
+          [0 maxRange maxRange 0]-td, 'k', 'FaceAlpha', 0.7) 
 end
 
 
