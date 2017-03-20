@@ -48,7 +48,7 @@ if isfield(D.snap.regionInterpretation, 'masking')
         if length(nsM)==1
             i=1;
             m = D.snap.regionInterpretation.masking.mask;
-            erased(1).channel(i).channelID = m.Attributes.channelID;
+            erased(1).channel(i).channelID = str2double(m.Attributes.channelID);
             for j = 1:length(m.ping)
                 erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
                 ranges = str2num(m.ping{j}.Text);
@@ -57,7 +57,7 @@ if isfield(D.snap.regionInterpretation, 'masking')
         else
             for i = 1:nsM
                 m = D.snap.regionInterpretation.masking.mask{i};
-                erased(1).channel(i).channelID = m.Attributes.channelID;
+                erased(1).channel(i).channelID = str2double(m.Attributes.channelID);
                 for j = 1:length(m.ping)
                     erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
                     ranges = str2num(m.ping{j}.Text);
