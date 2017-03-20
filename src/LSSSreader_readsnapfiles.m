@@ -19,10 +19,14 @@ if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer
     D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{1} = l;
 end
 
-if length(D.snap.regionInterpretation.masking.mask) == 1
-    m = D.snap.regionInterpretation.masking.mask;
-    D.snap.regionInterpretation.masking = rmfield(D.snap.regionInterpretation.masking, 'mask');
-    D.snap.regionInterpretation.masking.mask{1} = m;
+if isfield(D.snap.regionInterpretation, 'masking')
+    if isfield(D.snap.regionInterpretation.masking, 'mask')
+        if length(D.snap.regionInterpretation.masking.mask) == 1
+            m = D.snap.regionInterpretation.masking.mask;
+            D.snap.regionInterpretation.masking = rmfield(D.snap.regionInterpretation.masking, 'mask');
+            D.snap.regionInterpretation.masking.mask{1} = m;
+        end
+    end
 end
 
 %% Get the excluded ping ranges
