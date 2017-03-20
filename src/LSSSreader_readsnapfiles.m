@@ -37,14 +37,16 @@ end
 clear('erased')
 if isfield(D.snap.regionInterpretation, 'masking')
     erased.referenceTime = D.snap.regionInterpretation.masking.Attributes.referenceTime;
-    nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
-    for i = 1:nsM
-        m = D.snap.regionInterpretation.masking.mask{i};
-        erased.channel(i).channelID = m.Attributes.channelID;
-        for j = 1:length(m.ping)
-            erased.channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
-            ranges = str2num(m.ping{j}.Text);
-            erased.channel(i).y{j} = reshape(ranges, 2, [])';
+    if isfield(D.snap.regionInterpretation.masking, 'mask')
+        nsM = length(D.snap.regionInterpretation.masking.mask); % one for each channel
+        for i = 1:nsM
+            m = D.snap.regionInterpretation.masking.mask{i};
+            erased.channel(i).channelID = m.Attributes.channelID;
+            for j = 1:length(m.ping)
+                erased.channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
+                ranges = str2num(m.ping{j}.Text);
+                erased.channel(i).y{j} = reshape(ranges, 2, [])';
+            end
         end
     end
 end
