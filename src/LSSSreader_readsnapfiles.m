@@ -35,9 +35,16 @@ if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
     timeRange = D.snap.regionInterpretation.exclusionRanges.timeRange;
     nsE = length(timeRange);
     for i = 1:nsE
-        t = str2double(timeRange{i}.Attributes.start);
+        % Gavin: I know you don't like this. It works. You fix?
+        if nsE==1
+            t = str2double(timeRange.Attributes.start);
+            t2 = str2double(timeRange.Attributes.numberOfPings);
+        else
+            t = str2double(timeRange{i}.Attributes.start);
+            t2 = str2double(timeRange{i}.Attributes.numberOfPings);
+        end
         exclude(i).startTime = unixTimeToMatlab(t); %#ok<*AGROW>
-        exclude(i).numOfPings = str2double(timeRange{i}.Attributes.numberOfPings);
+        exclude(i).numOfPings = t2;
     end
 end
 
