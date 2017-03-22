@@ -17,25 +17,27 @@ function status=LSSSreader_comparesnapfiles(region1,region2)
 
 tol = 1e-3;
 
-status1 = 0;
-status2 = 0;
-msg1 = '';
-msg2 = '';
-
+status.comment = 'OK';
+status.statustype = 0;
+    
 % Loop over structures
 if length(region1)~=length(region2)
-    msg1 = 'Different number of polygons';
-    status1 = 1;
+    status.comment = 'Different number of polygons';
+    status.statustype = 1;
 else
+    A1= NaN(1,length(region1));
+    A2= NaN(1,length(region1));
     for i=1:length(region1)
-        
-        A1=polyarea(region1(i).x,region1(i).y);
-        A2=polyarea(region2(i).x,region2(i).y);
-        if (A1-A2)/A1>tol
-            msg2 = 'Different areas in polygon';
-            status2 = 1;
-        end
+        % Sum the volume of all regions in the files
+        A1(i)=polyarea(region1(i).x,region1(i).y);
+        A2(i)=polyarea(region2(i).x,region2(i).y);
+    end
+    A1_sum = sum(A1);
+    A2_sum = sum(A2);
+    
+    if (A1_sum-A2_sum)/A1_sum>tol
+        status.comment = 'Different area of polygons';
+        status.statustype = 2;
     end
 end
 
-status = 1 + status1 + status2*2;

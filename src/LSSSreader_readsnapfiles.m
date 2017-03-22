@@ -226,9 +226,13 @@ for i= 1:length(layerInterpretation.layer)
         % nodes"
         residualconnections=connections(exind,4:5);
         ind =  residualconnections == endnode;
-        % change "direction"?
+        % change "direction"? Needs to change direction
+        % multiple times.
+        % Go backwards
         if sum(ind(:,2))>0
             forward = false;
+        elseif sum(ind(:,1))>0 % Turn forward again
+            forward = true;
         end
         nextnode = find(ind(:,1)|ind(:,2));
         nextnode=exind(nextnode);
