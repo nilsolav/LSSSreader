@@ -15,7 +15,7 @@ files=LSSSreader_pairfiles(files);
 
 
 %% Pick a file
-for file=1:size(files.F,1)
+for file=1%[1:4 6:size(files.F,1)]
     snap = files.F{file,1};
     work = files.F{file,2};
     raw  = files.F{file,3};
@@ -25,22 +25,26 @@ for file=1:size(files.F,1)
     
     % Read snap file
     [school,layer,exclude,erased] = LSSSreader_readsnapfiles(snap);
-    
+if false    
     % Read raw file and convert to sv
-    [raw_header,raw_data] = readEKRaw(raw);
-    raw_cal = readEKRaw_GetCalParms(raw_header, raw_data);
-    Sv = readEKRaw_Power2Sv(raw_data,raw_cal);
-    
-    % Get the transducer depth
-    f=1;
-    if length(raw_data.pings) > 1
-        f=2; % Use 38 kHz if we can (which is usually channel 2 on IMR ships)
-    end
-    td = double(median(raw_data.pings(f).transducerdepth));
-    
-    % Plot result
-    [fh, ih] = readEKRaw_SimpleEchogram(Sv.pings(f).Sv, 1:length(Sv.pings(f).time), Sv.pings(f).range);
-    
+%     [raw_header,raw_data] = readEKRaw(raw);
+%     raw_cal = readEKRaw_GetCalParms(raw_header, raw_data);
+%     Sv = readEKRaw_Power2Sv(raw_data,raw_cal);
+%     
+%     % Get the transducer depth
+%     f=1;
+%     if length(raw_data.pings) > 1
+%         f=2; % Use 38 kHz if we can (which is usually channel 2 on IMR ships)
+%     end
+%     td = double(median(raw_data.pings(f).transducerdepth));
+%     
+%     % Plot result
+%     [fh, ih] = readEKRaw_SimpleEchogram(Sv.pings(f).Sv, 1:length(Sv.pings(f).time), Sv.pings(f).range);
+else
+    td=0;
+    f=2;
+    figure
+end
     % Plot the interpretation mask
     hold on
     cs = cool;

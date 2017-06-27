@@ -8,6 +8,78 @@ function [school,layer,exclude,erased]=LSSSreader_readsnapfiles(file)
 % file : The data file
 
 
+%         <layer id="0" hasBeenVisisted="true">
+%             <restSpecies ID="6"/>
+%             <speciesInterpretationRoot>
+%                <speciesInterpretationRep frequency="38">
+%                   <species ID="6" fraction="1.0"/>
+%                </speciesInterpretationRep>
+%                <speciesInterpretationRep frequency="70">
+%                   <species ID="6" fraction="1.0"/>
+%                </speciesInterpretationRep>
+%                <speciesInterpretationRep frequency="120">
+%                   <species ID="6" fraction="1.0"/>
+%                </speciesInterpretationRep>
+%                <speciesInterpretationRep frequency="200">
+%                   <species ID="6" fraction="1.0"/>
+%                </speciesInterpretationRep>
+%                <speciesInterpretationRep frequency="364">
+%                   <species ID="6" fraction="1.0"/>
+%                </speciesInterpretationRep>
+%             </speciesInterpretationRoot>
+%             <boundaries>
+
+% Old version
+%       <schoolRep referenceTime="1.132294810068E9" hasBeenVisisted="true" objectNumber="106">
+%          <restSpecies ID="21"/>
+%          <speciesInterpretationRoot>
+%             <speciesInterpretationRep frequency="38">
+%                <species ID="21" fraction="1.0"/>
+%             </speciesInterpretationRep>
+%          </speciesInterpretationRoot>
+%          <boundaryPoints>1834 188.6735 1834 187.71759 1833 186.87169 1832 181.94098 1831 181.55861
+% 1830 181.26744 1829 181.25745 1828 181.09627 1827 181.05626 1826 181.89217
+% 1825 181.87334 1825 183.21161 1826 183.6128 1827 183.92397 1827 184.49751
+% 1826 184.5687 1825 184.35869 1824 184.67107 1824 186.00932 1825 186.46169
+% 1826 186.86287 1827 186.98286 1828 187.02287 1829 187.18405 1830 187.95877
+% 1831 189.01466 1832 189.20584 1832 185.95576 1833 189.16585 </boundaryPoints>
+%       </schoolRep>
+%
+%
+% And we need to suport the new one:
+%
+%    <schoolInterpretation>
+%       <schoolMaskRep referenceTime="1.462268115355E9" hasBeenVisisted="true" objectNumber="6079">
+%          <speciesInterpretationRoot>
+%             <speciesInterpretationRep frequency="18">
+%                <species ID="6010" fraction="1"/>
+%             </speciesInterpretationRep>
+%             <speciesInterpretationRep frequency="38">
+%                <species ID="6010" fraction="1"/>
+%             </speciesInterpretationRep>
+%             <speciesInterpretationRep frequency="70">
+%                <species ID="6010" fraction="1"/>
+%             </speciesInterpretationRep>
+%             <speciesInterpretationRep frequency="120">
+%                <species ID="6010" fraction="1"/>
+%             </speciesInterpretationRep>
+%             <speciesInterpretationRep frequency="200">
+%                <species ID="6010" fraction="1"/>
+%             </speciesInterpretationRep>
+%             <speciesInterpretationRep frequency="333">
+%                <species ID="6010" fraction="1"/>
+%             </speciesInterpretationRep>
+%          </speciesInterpretationRoot>
+%          <pingMask relativePingNumber="205">45.21126 50.080643</pingMask>
+%          <pingMask relativePingNumber="206">45.21126 50.080643</pingMask>
+%          <pingMask relativePingNumber="207">45.21126 50.080643</pingMask>
+%          <pingMask relativePingNumber="208">45.21126 50.080643</pingMask>
+%          <pingMask relativePingNumber="209">45.21126 50.080643</pingMask>
+%          <pingMask relativePingNumber="210">45.21126 50.080643</pingMask>
+%          <pingMask relativePingNumber="211">45.21126 50.080643</pingMask>
+%          <pingMask relativePingNumber="212">45.21126 50.080643</pingMask>
+%       </schoolMaskRep>
+
 %% Import the snap file
 D.snap = xml2struct(file);
 
@@ -72,12 +144,26 @@ if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
     nsI= length(D.snap.regionInterpretation.schoolInterpretation.schoolRep);
     for i=1:nsI
         % The boundary
+        %        D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID
+        if isfield(D.snap.regionInterpretation.schoolInterpretation.schoolRep{i},'speciesInterpretationRoot') && isfield(D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot,'speciesInterpretationRep')
+            % Need to implement more than one region for this one...
+            nfreq=length(D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep);
+            if nfreq==1
+                school(i).channel(1).speciesID =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID;
+                school(i).channel(1).fraction =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction;
+                school(i).channel(1).frequency = D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency;
+            else
+               for fr = 1:nfreq 
+                   school(i).channel(fr).speciesID =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
+                   school(i).channel(fr).fraction =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
+                   school(i).channel(fr).frequency = D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+               end
+            end
+        end
         T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
         dum = str2num(strrep(T,newline,' '));
         school(i).x = dum(1:2:end-1);
         school(i).y = dum(2:2:end);
-        school(i).fraction  = NaN;
-        school(i).speciesID = NaN;
         school(i).regiontype = 'school';
     end
 end
