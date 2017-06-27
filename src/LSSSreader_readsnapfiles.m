@@ -140,32 +140,65 @@ if isfield(D.snap.regionInterpretation, 'masking')
 end
 %% Get the schoolInterpretation
 school = struct([]);
+% old files have a schoolRep structure, while newer files have a
+% schoolMaskRep structure. Both are the same except for how the school
+% boundaries are defined. We assume that no files contain both
+% schoolRep and schoolMaskRep (if that is the case, we use schoolMaskRep).
+
+nsI = 0;
+schoolFormatType = '';
 if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
-    nsI= length(D.snap.regionInterpretation.schoolInterpretation.schoolRep);
-    for i=1:nsI
-        % The boundary
-        %        D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID
-        if isfield(D.snap.regionInterpretation.schoolInterpretation.schoolRep{i},'speciesInterpretationRoot') && isfield(D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot,'speciesInterpretationRep')
-            % Need to implement more than one region for this one...
-            nfreq=length(D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep);
-            if nfreq==1
-                school(i).channel(1).speciesID =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID;
-                school(i).channel(1).fraction =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction;
-                school(i).channel(1).frequency = D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency;
-            else
-               for fr = 1:nfreq 
-                   school(i).channel(fr).speciesID =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
-                   school(i).channel(fr).fraction =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
-                   school(i).channel(fr).frequency = D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
-               end
-            end
+    s = D.snap.regionInterpretation.schoolInterpretation.schoolRep;
+    nsI = length(s);
+    schoolFormatType = 'rep';
+end
+if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolMaskRep')
+    s = D.snap.regionInterpretation.schoolInterpretation.schoolMaskRep;
+    nsI = length(s);
+    schoolFormatType = 'maskRep';
+end
+
+for i=1:nsI
+    % The boundary
+    %        D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID
+    if isfield(s{i},'speciesInterpretationRoot') && isfield(s{i}.speciesInterpretationRoot,'speciesInterpretationRep')
+        % Need to implement more than one region for this one...
+        nfreq=length(s{i}.speciesInterpretationRoot.speciesInterpretationRep);
+        if nfreq==1
+            school(i).channel(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID;
+            school(i).channel(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction;
+            school(i).channel(1).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency;
+        else
+           for fr = 1:nfreq 
+               school(i).channel(fr).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
+               school(i).channel(fr).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
+               school(i).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+           end
         end
-        T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
+    end
+    if strcmp(schoolFormatType, 'rep')
+        T = s{i}.boundaryPoints.Text;
         dum = str2num(strrep(T,newline,' '));
         school(i).x = dum(1:2:end-1);
         school(i).y = dum(2:2:end);
         school(i).regiontype = 'school';
     end
+
+    if strcmp(schoolFormatType, 'maskRep')
+        clear topBoundary bottomBoundary pingNum
+        for j = 1:length(s{i}.pingMask)
+            T = s{i}.pingMask{j}.Text;
+            dum = str2num(strrep(T,newline,' '));
+            ping = str2num(s{i}.pingMask{j}.Attributes.relativePingNumber);
+            topBoundary(j) = dum(1);
+            bottomBoundary(j) = dum(2);
+            pingNum(j) = ping;
+        end
+        school(i).x = [pingNum flip(pingNum)]+1; % +1 needed to align schools with regions
+        school(i).y = [topBoundary flip(bottomBoundary)];
+        school(i).regiontype = 'school';
+    end
+    
 end
 
 %% Get the layerInterpretation.boundaries.verticalBoundary(ies)

@@ -15,7 +15,7 @@ files=LSSSreader_pairfiles(files);
 
 
 %% Pick a file
-for file=1%[1:4 6:size(files.F,1)]
+for file=[1:4 6:size(files.F,1)]
     snap = files.F{file,1};
     work = files.F{file,2};
     raw  = files.F{file,3};
