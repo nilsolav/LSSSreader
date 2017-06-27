@@ -153,11 +153,11 @@ if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolRep')
                 school(i).channel(1).fraction =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction;
                 school(i).channel(1).frequency = D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency;
             else
-               for fr = 1:nfreq 
-                   school(i).channel(fr).speciesID =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
-                   school(i).channel(fr).fraction =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
-                   school(i).channel(fr).frequency = D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
-               end
+                for fr = 1:nfreq
+                    school(i).channel(fr).speciesID =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
+                    school(i).channel(fr).fraction =  D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
+                    school(i).channel(fr).frequency = D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+                end
             end
         end
         T=D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.boundaryPoints.Text;
@@ -216,7 +216,51 @@ for i = 1:nL
     if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}, 'restSpecies')
         layerInterpretation.layer(i).restSpecies = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.restSpecies);
     end
+    for j=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary)
+        layerInterpretation.layer(i).curveBoundary(j) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
+    end
     
+    for k=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary)
+        layerInterpretation.layer(i).verticalBoundary(k) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.verticalBoundary{k}.Attributes.id);
+    end
+    % Add the conectors of the layer
+    for k=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.connectors.id)
+        layerInterpretation.layer(i).connectors(k) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.connectors.id{k}.Attributes.number);
+    end
+    % Add species information to data structure
+    if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i},'speciesInterpretationRoot') && isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot,'speciesInterpretationRep')
+        if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep)==1
+            layerInterpretation.layer(i).channel(1).frequency = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency);
+            if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep,'species')
+                if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep.species)==1
+                    layerInterpretation.layer(i).channel(1).species(1).fraction = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction);
+                    layerInterpretation.layer(i).channel(1).species(1).speciesID = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID);
+                else
+                    for l=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep.species)
+                        layerInterpretation.layer(i).channel(1).species(l).fraction = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep.species{l}.Attributes.fraction);
+                        layerInterpretation.layer(i).channel(1).species(l).speciesID = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep.species{l}.Attributes.ID);
+                    end
+                end
+            end
+            
+        else
+            for k=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep)
+                layerInterpretation.layer(i).channel(k).frequency = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep{k}.Attributes.frequency);
+                if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep{k},'species')
+                    if length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep{k}.species)==1
+                        layerInterpretation.layer(i).channel(k).species(1).fraction = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep{k}.species.Attributes.fraction);
+                        layerInterpretation.layer(i).channel(k).species(1).speciesID = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep{k}.species.Attributes.ID);
+                    else
+                        for l=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep{k}.species)
+                            layerInterpretation.layer(i).channel(k).species(l).fraction = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep{k}.species{l}.Attributes.fraction);
+                            layerInterpretation.layer(i).channel(k).species(l).speciesID = (D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.speciesInterpretationRoot.speciesInterpretationRep{k}.species{l}.Attributes.ID);
+                        end
+                    end
+                end
+                
+            end
+        end
+    end
     
     for j=1:length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary)
         layerInterpretation.layer(i).curveBoundary(j) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.boundaries.curveBoundary{j}.Attributes.id);
@@ -228,6 +272,7 @@ for i = 1:nL
         layerInterpretation.layer(i).connectors(k) = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.connectors.id{k}.Attributes.number);
     end
 end
+
 
 %% Debugging plot section
 if false
@@ -353,9 +398,11 @@ for i= 1:length(layerInterpretation.layer)
         layer(i).x = [layer(i).x x];
         layer(i).y = [layer(i).y y];
     end
-    % Add information about the layer
-    layer(i).fraction  = NaN;
-    layer(i).speciesID = NaN;
+    % Add species ID information about the layer
+    if isfield(layerInterpretation.layer(i),'channel')
+        layer(i).channel = layerInterpretation.layer(i).channel;
+    end
+    layer(i).restspecies = layerInterpretation.layer(i).restSpecies;
     layer(i).regiontype = 'region';
 end
 
