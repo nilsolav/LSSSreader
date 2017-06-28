@@ -4,6 +4,9 @@ whr = which('LSSSreader_readsnapfiles');
 [dr,~,~] = fileparts(whr);
 dr = dr(1:end-3);
 
+% Location of example files for Gavin
+%dr = 'F:\Documents\Dropbox\toRoland';
+
 % Recursively list relevant data in the example directory. This can be used
 % to search files in callisto.
 files.snap = rdir(fullfile(dr,'exampledata','**','*.snap'));
