@@ -21,40 +21,38 @@ plID=true;
 if ~isempty(layer)
     cs = cool;
     for i=1:length(layer)
-        
-        % Plot the patch
-        if length(layer)>1
-            col = round(interp1(linspace(1,length(layer),size(cs,1)),1:size(cs,1),i));
-        else
-            col=1;
-        end
-        patch(layer(i).x,layer(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
-
-        % Plot the Id string
-        if isfield(layer(i),'channel') && isempty(layer(i).channel)
-            Idstring='No species ID';
-        else
-            Idstring=[];
-            if isfield(layer(i),'channel')
-                for ch = 1:length(layer(i).channel)
+        % Does the layer have a channel associated to it?
+        if isfield(layer(i),'channel') && ~isempty(layer(i).channel)
+            % Loop over channels and select frequency
+            for ch = 1:length(layer(i).channel)
+                % Plot the patch only for the relevant frequency
+                if strcmp(layer(i).channel(ch).frequency,f)
+                        if length(layer)>1
+                            col = round(interp1(linspace(1,length(layer),size(cs,1)),1:size(cs,1),i));
+                        else
+                            col=1;
+                        end
+                    patch(layer(i).x,layer(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
+                    % Get hte ID string for this patch and freq
                     if isfield(layer(i).channel(ch),'species')
+                        Idstring=[];
                         for sp=1:length(layer(i).channel(ch).species)
                             if strcmp(layer(i).channel(ch).frequency,f)
                                 Idstring =[Idstring, ['ID:',layer(i).channel(ch).species(sp).speciesID,' fraction:',layer(i).channel(ch).species(sp).fraction,';']];
                             end
                         end
+                    else
+                        Idstring='No species ID';
+                    end
+                    if plID
+                        text(layer(i).x(1),layer(i).y(1)-td,Idstring)
                     end
                 end
             end
         end
-        if isempty(Idstring)
-            Idstring='No species ID';
-        end
-        text(layer(i).x(1),layer(i).y(1)-td,Idstring)
     end
 end
 
-Idstring=[];
 % Plot the interpretation school
 if ~isempty(school)
     cs = hot;
@@ -63,7 +61,7 @@ if ~isempty(school)
         % Plot only non empty schools (since we do not know whether an
         % empty school is assiciated to a frequency)
         if ~isempty(school(i).channel)
-            % Loop over channels 
+            % Loop over channels
             for ch = 1:length(school(i).channel)
                 % Plot only the relevant frequency
                 if strcmp(school(i).channel(ch).frequency,f)
