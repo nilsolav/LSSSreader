@@ -1,4 +1,4 @@
-function LSSSreader_plotsnapfiles(layer,school,erased,exclude,f,td)
+function LSSSreader_plotsnapfiles(layer,school,erased,exclude,f,channelID,td,pingTimes)
 %LSSSreader_plotsnapfiles
 %   LSSSreader_plotsnapfiles(layer,school,erased,exclude,ch,td) Plot layers,
 %   schools, erased and exclude regions as pathces.
@@ -9,7 +9,14 @@ function LSSSreader_plotsnapfiles(layer,school,erased,exclude,f,td)
 %   'exclude' -  The excluded regions from LSSSreader_readsnapfiles
 %   td - The trasnducerdpeth (default 0)
 %   f - the frequency to plot
+%   channelID - the channel ID to plot
+%   pingTimes - the timestamps for each ping of the current channel (this
+%               is needed because the snap files use ping time for exclude
+%               regions).
 %
+% The work/snap files do not explicitly give the mapping between channelID
+% and channel frequency. Hence this function asks for both a channelID and
+% frequency. It is up to (for the moment) the calling code to get these correct.
 
 if nargin<6
     td=0;
@@ -84,35 +91,33 @@ if ~isempty(school)
         end
     end
 end
-% Gavin: can you fix these? I think we need to use a similar structure as
-% school and layer, if at all poassible.
 
 % Plot erased regions
-% if ~isempty(erased)
-%     k = find(ch == [erased.channel.channelID]); % erased data for channel f.
-%     if ~isempty(k == 1)
-%         for i=1:length(erased.channel(k).x) % loop over each ping with erased samples
-%             ping = erased.channel(k).x(i);
-%             ranges = erased.channel(k).y{i};
-%             for j=1:size(ranges,1) % loop over each contingous block of erased samples
-%                 startR = ranges(j,1);
-%                 endR = startR + ranges(j,2);
-%                 patch([ping ping+1 ping+1 ping], ...
-%                     [startR startR endR endR]-td, 'k', ...
-%                     'FaceAlpha', 0.8, 'EdgeColor', 'None')
-%             end
-%         end
-%     end
-% end
-warning('Exclude and erased should work on ping, not time... fix in the reader?')
-% if ~isempty(exclude)
-%     % Plot exclude regions
-%     ym=ylim;
-%     maxrange = ym(2);
-%     for i=1:length(exclude)
-%         [~, startPing] = min(abs(exclude(i).startTime - Sv.pings(f).time));
-%         endPing = startPing + exclude(i).numOfPings;
-%         patch([startPing startPing endPing endPing], ...
-%             [0 maxRange maxRange 0]-td, 'k', 'FaceAlpha', 0.7)
-%     end
-% end
+if ~isempty(erased)
+    k = find(channelID == [erased.channel.channelID]); % erased data for channel f.
+    if ~isempty(k == 1)
+        for i = 1:length(erased.channel(k).x) % loop over each ping with erased samples
+            ping = erased.channel(k).x(i);
+            ranges = erased.channel(k).y{i};
+            for j = 1:size(ranges,1) % loop over each contingous block of erased samples
+                startR = ranges(j,1);
+                endR = startR + ranges(j,2);
+                patch([ping ping+1 ping+1 ping], ...
+                    [startR startR endR endR]-td, 'k', ...
+                    'FaceAlpha', 0.8, 'EdgeColor', 'None')
+            end
+        end
+    end
+end
+    
+if ~isempty(exclude)
+    % Plot exclude regions. These always apply to all channels.
+    ym=ylim;
+    maxRange = ym(2);
+    for i=1:length(exclude)
+        [~, startPing] = min(abs(exclude(i).startTime - pingTimes));
+        endPing = startPing + exclude(i).numOfPings;
+        patch([startPing startPing endPing endPing], ...
+            [0 maxRange maxRange 0]-td, 'k', 'FaceAlpha', 0.7)
+    end
+end

@@ -53,7 +53,7 @@ for file=1:size(files.F,1)
             % Plot the interpretation layer
             hold on
             f=num2str(Sv.pings(ch).frequency(1)/1000);
-            LSSSreader_plotsnapfiles(layer,school,erased,exclude,f,td)
+            LSSSreader_plotsnapfiles(layer,school,erased,exclude,f,ch,td,Sv.pings(ch).time)
             title([f,' kHz'])
         end
     else
@@ -64,6 +64,6 @@ for file=1:size(files.F,1)
         figure
         hold on
         % Plot the interpretation layer
-        LSSSreader_plotsnapfiles(layer,school,erased,exclude,f,td)
+        LSSSreader_plotsnapfiles(layer,school,erased,exclude,f,ch,td,Sv.pings(ch).time)
     end
 end
