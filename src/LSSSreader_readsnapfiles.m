@@ -159,6 +159,11 @@ if isfield(D.snap.regionInterpretation.schoolInterpretation, 'schoolMaskRep')
     schoolFormatType = 'maskRep';
 end
 
+if nsI==1
+    s_d{1}=s;
+    s=s_d;
+end
+
 for i=1:nsI
     % The boundary
     %        D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID

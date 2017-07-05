@@ -72,7 +72,11 @@ if ~isempty(school)
             for ch = 1:length(school(i).channel)
                 % Plot only the relevant frequency
                 if strcmp(school(i).channel(ch).frequency,f)
-                    col = round(interp1(linspace(1,length(school),size(cs,1)),1:size(cs,1),i));
+                    if length(col)~=1
+                        col = round(interp1(linspace(1,length(school),size(cs,1)),1:size(cs,1),i));
+                    else
+                        col=1;
+                    end
                     patch(school(i).x,school(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
                     % get hte ID string for this patch and freq
                     if isfield(school(i).channel(ch),'species')
