@@ -182,7 +182,11 @@ for i=1:nsI
         else % Several frequencies
             for fr = 1:nfreq
                 % Loop over channels (frequencies)
-                if length(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species)==1
+                if ~isfield(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr},'species')
+%                    school(i).channel(fr).species(1).speciesID =  'NaN';
+%                    school(i).channel(fr).species(1).fraction =  NaN;
+                    school(i).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+                elseif length(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species)==1
                     % One Species ID for this school for this frequency (several freq)
                     school(i).channel(fr).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
                     school(i).channel(fr).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
