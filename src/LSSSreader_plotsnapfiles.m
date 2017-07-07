@@ -67,12 +67,12 @@ if ~isempty(school)
     for i=1:length(school)
         % Plot only non empty schools (since we do not know whether an
         % empty school is assiciated to a frequency)
-        if ~isempty(school(i).channel)
+        if isfield(school(i),'channel') && ~isempty(school(i).channel)
             % Loop over channels
             for ch = 1:length(school(i).channel)
                 % Plot only the relevant frequency
                 if strcmp(school(i).channel(ch).frequency,f)
-                    if length(col)~=1
+                    if length(school)~=1
                         col = round(interp1(linspace(1,length(school),size(cs,1)),1:size(cs,1),i));
                     else
                         col=1;
