@@ -67,7 +67,7 @@ if ~isempty(school)
     for i=1:length(school)
         % Plot only non empty schools (since we do not know whether an
         % empty school is assiciated to a frequency)
-        if ~isempty(school(i).channel)
+        if isfield(school(i),'channel') && ~isempty(school(i).channel)
             % Loop over channels
             for ch = 1:length(school(i).channel)
                 % Plot only the relevant frequency
