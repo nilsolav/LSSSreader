@@ -18,7 +18,7 @@ function LSSSreader_plotsnapfiles(layer,school,erased,exclude,f,channelID,td,pin
 % and channel frequency. Hence this function asks for both a channelID and
 % frequency. It is up to (for the moment) the calling code to get these correct.
 
-if nargin<6
+if nargin<7
     td=0;
 end
 
@@ -72,7 +72,7 @@ if ~isempty(school)
             for ch = 1:length(school(i).channel)
                 % Plot only the relevant frequency
                 if strcmp(school(i).channel(ch).frequency,f)
-                    if length(col)~=1
+                    if length(school)~=1
                         col = round(interp1(linspace(1,length(school),size(cs,1)),1:size(cs,1),i));
                     else
                         col=1;
