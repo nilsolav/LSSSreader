@@ -79,7 +79,7 @@ if ~isempty(school)
                     end
                     patch(school(i).x,school(i).y-td,cs(col,:),'FaceColor',cs(col,:),'FaceAlpha',.3)
                     % get hte ID string for this patch and freq
-                    if isfield(school(i).channel(ch),'species')
+                    if isfield(school(i).channel(ch),'species')&&~isempty(school(i).channel(ch).species)
                         Idstring=[];
                         for sp=1:length(school(i).channel(ch).species)
                             Idstring =[Idstring, ['ID:',school(i).channel(ch).species(sp).speciesID,' fraction:',school(i).channel(ch).species(sp).fraction,';']];
