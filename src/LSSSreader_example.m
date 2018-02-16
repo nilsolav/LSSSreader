@@ -20,7 +20,7 @@ files=LSSSreader_pairfiles(files);
 pl = true; % Set to false for plotting the masks only (without background echograms)
 %pl = false;
 
-for file=3%1:size(files.F,1)
+for file=1:size(files.F,1)
     snap = files.F{file,1};
     work = files.F{file,2};
     raw  = files.F{file,3};
