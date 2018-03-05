@@ -164,6 +164,7 @@ if nsI==1
     s=s_d;
 end
 
+schooli = 1;
 for i=1:nsI
     % The boundary
     %        D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID
@@ -174,33 +175,33 @@ for i=1:nsI
         if nfreq==1 % One frequency
             if length(s{i}.speciesInterpretationRoot.speciesInterpretationRep.species)==1
                 % One species ID for this school (one freq)
-                school(i).channel(1).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID;
-                school(i).channel(1).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction;
+                school(schooli).channel(1).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID;
+                school(schooli).channel(1).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction;
             else
                 % Several species ID for this school (one freq)
                 for sp=1:length(length(s{i}.speciesInterpretationRoot.speciesInterpretationRep.species))
-                    school(i).channel(1).species.speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species{sp}.Attributes.ID;
-                    school(i).channel(1).species.fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species{sp}.Attributes.fraction;
+                    school(schooli).channel(1).species.speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species{sp}.Attributes.ID;
+                    school(schooli).channel(1).species.fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species{sp}.Attributes.fraction;
                 end
             end
-            school(i).channel(1).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency;
+            school(schooli).channel(1).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency;
         else % Several frequencies
             for fr = 1:nfreq
                 % Loop over channels (frequencies)
                 if ~isfield(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr},'species')
 %                    school(i).channel(fr).species(1).speciesID =  'NaN';
 %                    school(i).channel(fr).species(1).fraction =  NaN;
-                    school(i).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+                    school(schooli).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
                 elseif length(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species)==1
                     % One Species ID for this school for this frequency (several freq)
-                    school(i).channel(fr).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
-                    school(i).channel(fr).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
-                    school(i).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+                    school(schooli).channel(fr).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
+                    school(schooli).channel(fr).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
+                    school(schooli).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
                 else
                     % If there are several species per school box
                     for sp=1:length(length(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species))
-                        school(i).channel(fr).species(sp).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species{sp}.Attributes.ID;
-                        school(i).channel(fr).species(sp).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species{sp}.Attributes.fraction;
+                        school(schooli).channel(fr).species(sp).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species{sp}.Attributes.ID;
+                        school(schooli).channel(fr).species(sp).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species{sp}.Attributes.fraction;
                     end
                     school(i).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
                 end
@@ -213,24 +214,27 @@ for i=1:nsI
     if strcmp(schoolFormatType, 'rep')
         T = s{i}.boundaryPoints.Text;
         dum = str2num(strrep(T,newline,' '));
-        school(i).x = dum(1:2:end-1);
-        school(i).y = dum(2:2:end);
-        school(i).regiontype = 'school';
+        school(schooli).x = dum(1:2:end-1);
+        school(schooli).y = dum(2:2:end);
+        school(schooli).regiontype = 'school';
     end
     
     if strcmp(schoolFormatType, 'maskRep')
         clear topBoundary bottomBoundary pingNum
-        for j = 1:length(s{i}.pingMask)
-            T = s{i}.pingMask{j}.Text;
-            dum = str2num(strrep(T,newline,' '));
-            ping = str2num(s{i}.pingMask{j}.Attributes.relativePingNumber);
-            topBoundary(j) = dum(1);
-            bottomBoundary(j) = dum(2);
-            pingNum(j) = ping;
+        if isfield(s{i}, 'pingMask')
+            for j = 1:length(s{i}.pingMask)
+                T = s{i}.pingMask{j}.Text;
+                dum = str2num(strrep(T,newline,' '));
+                ping = str2num(s{i}.pingMask{j}.Attributes.relativePingNumber);
+                topBoundary(j) = dum(1);
+                bottomBoundary(j) = dum(2);
+                pingNum(j) = ping;
+            end
+            school(schooli).x = [pingNum flip(pingNum)]+1; % +1 needed to align schools with regions
+            school(schooli).y = [topBoundary flip(bottomBoundary)];
+            school(schooli).regiontype = 'school';
+            schooli = schooli + 1;
         end
-        school(i).x = [pingNum flip(pingNum)]+1; % +1 needed to align schools with regions
-        school(i).y = [topBoundary flip(bottomBoundary)];
-        school(i).regiontype = 'school';
     end
 end
 
