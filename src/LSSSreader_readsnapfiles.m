@@ -280,7 +280,13 @@ end
 % layerInterpretation.layerDefinitions.layer
 nL = length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer);
 for i = 1:nL
-    layerInterpretation.layer(i).id   = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id);
+    % LSSS 2.4.0 generated files (and perhaps earlier) don't have an id
+    % attribute, so ignore it if so.
+    if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes, 'id')
+        layerInterpretation.layer(i).id   = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id);
+    else
+        layerInterpretation.layer(i).id   = NaN;
+    end
     layerInterpretation.layer(i).hasBeenVisisted = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.hasBeenVisisted;
     layerInterpretation.layer(i).restSpecies = 0.0; % IS THIS THE RIGHT DEFAULT VALUE when restSpecies is not in the XML????
     if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}, 'restSpecies')
