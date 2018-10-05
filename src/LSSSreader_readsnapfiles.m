@@ -1,5 +1,5 @@
 function [school,layer,exclude,erased]=LSSSreader_readsnapfiles(file)
-% Reads the LSSS nap and work files and generates polygons for each region
+% Reads the LSSS snap and work files and generates polygons for each region
 % and school
 %
 % layerInterpretation=LSSSreader_readsnapfiles(file)
