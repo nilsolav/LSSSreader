@@ -233,6 +233,10 @@ for i=1:nsI
             school(schooli).x = [pingNum flip(pingNum)]+1; % +1 needed to align schools with regions
             school(schooli).y = [topBoundary flip(bottomBoundary)];
             school(schooli).regiontype = 'school';
+            school(schooli).maskPingNum = pingNum + 1;
+            school(schooli).maskTopBoundary = topBoundary;
+            school(schooli).maskBottomBoundary = bottomBoundary;
+            school(schooli).note = 'The mask* fields describe the same school as the .x, .y polygon format, but in a mask format.';
             schooli = schooli + 1;
         end
     end
