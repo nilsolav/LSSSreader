@@ -1,5 +1,5 @@
 function [school,layer,exclude,erased]=LSSSreader_readsnapfiles(file)
-% Reads the LSSS nap and work files and generates polygons for each region
+% Reads the LSSS snap and work files and generates polygons for each region
 % and school
 %
 % layerInterpretation=LSSSreader_readsnapfiles(file)
@@ -238,6 +238,10 @@ for i=1:nsI
             school(schooli).x = [pingNum flip(pingNum)]+1; % +1 needed to align schools with regions
             school(schooli).y = [topBoundary flip(bottomBoundary)];
             school(schooli).regiontype = 'school';
+            school(schooli).maskPingNum = pingNum + 1;
+            school(schooli).maskTopBoundary = topBoundary;
+            school(schooli).maskBottomBoundary = bottomBoundary;
+            school(schooli).note = 'The mask* fields describe the same school as the .x, .y polygon format, but in a mask format.';
             schooli = schooli + 1;
         end
     end
@@ -285,7 +289,13 @@ end
 % layerInterpretation.layerDefinitions.layer
 nL = length(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer);
 for i = 1:nL
-    layerInterpretation.layer(i).id   = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id);
+    % LSSS 2.4.0 generated files (and perhaps earlier) don't have an id
+    % attribute, so ignore it if so.
+    if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes, 'id')
+        layerInterpretation.layer(i).id   = str2double(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.id);
+    else
+        layerInterpretation.layer(i).id   = NaN;
+    end
     layerInterpretation.layer(i).hasBeenVisisted = D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}.Attributes.hasBeenVisisted;
     layerInterpretation.layer(i).restSpecies = 0.0; % IS THIS THE RIGHT DEFAULT VALUE when restSpecies is not in the XML????
     if isfield(D.snap.regionInterpretation.layerInterpretation.layerDefinitions.layer{i}, 'restSpecies')
