@@ -223,9 +223,14 @@ for i=1:nsI
         clear topBoundary bottomBoundary pingNum
         if isfield(s{i}, 'pingMask')
             for j = 1:length(s{i}.pingMask)
-                T = s{i}.pingMask{j}.Text;
+                if length(s{i}.pingMask)==1
+                    T = s{i}.pingMask.Text;
+                    ping = str2num(s{i}.pingMask.Attributes.relativePingNumber);
+                else
+                    T = s{i}.pingMask{j}.Text;
+                    ping = str2num(s{i}.pingMask{j}.Attributes.relativePingNumber);
+                end
                 dum = str2num(strrep(T,newline,' '));
-                ping = str2num(s{i}.pingMask{j}.Attributes.relativePingNumber);
                 topBoundary(j) = dum(1);
                 bottomBoundary(j) = dum(2);
                 pingNum(j) = ping;
