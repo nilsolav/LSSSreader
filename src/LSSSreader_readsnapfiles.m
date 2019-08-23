@@ -1,4 +1,4 @@
-function [school,layer,exclude,erased]=LSSSreader_readsnapfiles(file)
+function [school,layer,exclude,erased, info]=LSSSreader_readsnapfiles(file)
 % Reads the LSSS snap and work files and generates polygons for each region
 % and school
 %
@@ -93,11 +93,22 @@ end
 
 if isfield(D.snap.regionInterpretation, 'masking')
     if isfield(D.snap.regionInterpretation.masking, 'mask')
-        if length(D.snap.regionInterpretation.masking.mask) == 1
-            m = D.snap.regionInterpretation.masking.mask;
+        m = D.snap.regionInterpretation.masking.mask;
+        if length(m) == 1
             D.snap.regionInterpretation.masking = rmfield(D.snap.regionInterpretation.masking, 'mask');
             D.snap.regionInterpretation.masking.mask{1} = m;
         end
+
+        m = D.snap.regionInterpretation.masking.mask;
+        for i = 1:length(m)
+            if length(m{i}.ping) == 1
+                tt = m{i}.ping;
+                m{i} = rmfield(m{i}, 'ping');
+                m{i}.ping{1} = tt;                
+            end
+        end
+        D.snap.regionInterpretation.masking = rmfield(D.snap.regionInterpretation.masking, 'mask');
+        D.snap.regionInterpretation.masking.mask = m;
     end
 end
 
@@ -108,6 +119,10 @@ if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
         D.snap.regionInterpretation.exclusionRanges.timeRange{1} = t;
     end
 end
+
+%% Get some background info 
+info.numberOfPings = str2num(D.snap.regionInterpretation.timeRange.Attributes.numberOfPings);
+
 %% Get the excluded ping ranges
 exclude = struct([]);
 if isfield(D.snap.regionInterpretation.exclusionRanges, 'timeRange')
@@ -131,7 +146,7 @@ if isfield(D.snap.regionInterpretation, 'masking')
             m = D.snap.regionInterpretation.masking.mask{i};
             erased(1).channel(i).channelID = str2double(m.Attributes.channelID);
             for j = 1:length(m.ping)
-                erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset);
+                erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset)+1;
                 ranges = str2num(m.ping{j}.Text);
                 erased(1).channel(i).y{j} = reshape(ranges, 2, [])';
             end
@@ -464,6 +479,9 @@ for i= 1:length(layerInterpretation.layer)
         % If it is a vertical boundary
         if connections_sorted(j,1)==2
             x = [layerInterpretation.boundaries.verticalBoundary(matid).pingOffset layerInterpretation.boundaries.verticalBoundary(matid).pingOffset];
+            if x(1) == 0 % Hack
+                x = x + 1;
+            end
             y = [layerInterpretation.boundaries.verticalBoundary(matid).startDepth layerInterpretation.boundaries.verticalBoundary(matid).endDepth];
         elseif connections_sorted(j,1)==1
             % if it is a curved layer
