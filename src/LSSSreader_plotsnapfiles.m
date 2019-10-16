@@ -88,7 +88,9 @@ if ~isempty(school)
                         Idstring='No species ID';% No ID but has frequency so it is ok
                     end
                     if plID
-                        text(school(i).x(1),school(i).y(1)-td,Idstring)
+                        if ~isempty(school(i).x)&&~isempty(school(i).y)
+                            text(school(i).x(1),school(i).y(1)-td,Idstring)
+                        end
                     end
                 end
             end
@@ -118,10 +120,12 @@ if ~isempty(exclude)
     % Plot exclude regions. These always apply to all channels.
     ym=ylim;
     maxRange = ym(2);
-    for i=1:length(exclude)
-        [~, startPing] = min(abs(exclude(i).startTime - pingTimes));
-        endPing = startPing + exclude(i).numOfPings;
-        patch([startPing startPing endPing endPing], ...
-            [0 maxRange maxRange 0]-td, 'k', 'FaceAlpha', 0.7)
+    if length(exclude)>1%Need to revise this to plot single excluded pings
+        for i=1:length(exclude)
+            [~, startPing] = min(abs(exclude(i).startTime - pingTimes));
+            endPing = startPing + exclude(i).numOfPings;
+            patch([startPing startPing endPing endPing], ...
+                [0 maxRange maxRange 0]-td, 'k', 'FaceAlpha', 0.7)
+        end
     end
 end
