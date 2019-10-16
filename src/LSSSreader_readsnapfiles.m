@@ -226,14 +226,6 @@ for i=1:nsI
         % TODO: sum up and allocate to rest ID if applicable
     end
     
-    if strcmp(schoolFormatType, 'rep')
-        T = s{i}.boundaryPoints.Text;
-        dum = str2num(strrep(T,newline,' '));
-        school(schooli).x = dum(1:2:end-1);
-        school(schooli).y = dum(2:2:end);
-        school(schooli).regiontype = 'school';
-    end
-    
     if strcmp(schoolFormatType, 'maskRep')
         clear topBoundary bottomBoundary pingNum
         if isfield(s{i}, 'pingMask')
@@ -257,9 +249,15 @@ for i=1:nsI
             school(schooli).maskTopBoundary = topBoundary;
             school(schooli).maskBottomBoundary = bottomBoundary;
             school(schooli).note = 'The mask* fields describe the same school as the .x, .y polygon format, but in a mask format.';
-            schooli = schooli + 1;
         end
+    elseif strcmp(schoolFormatType, 'rep')
+        T = s{i}.boundaryPoints.Text;
+        dum = str2num(strrep(T,newline,' '));
+        school(schooli).x = dum(1:2:end-1);
+        school(schooli).y = dum(2:2:end);
+        school(schooli).regiontype = 'school';
     end
+    schooli = schooli + 1;
 end
 
 %% Get the layerInterpretation.boundaries.verticalBoundary(ies)
