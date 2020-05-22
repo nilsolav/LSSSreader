@@ -147,8 +147,8 @@ if isfield(D.snap.regionInterpretation, 'masking')
             erased(1).channel(i).channelID = str2double(m.Attributes.channelID);
             for j = 1:length(m.ping)
                 erased(1).channel(i).x(j) = str2double(m.ping{j}.Attributes.pingOffset)+1;
-                ranges = str2num(m.ping{j}.Text);
-                erased(1).channel(i).y{j} = reshape(ranges, 2, [])';
+                %ranges = str2num(m.ping{j}.Text);
+                erased(1).channel(i).y{j} = str2num(m.ping{j}.Text);%reshape(ranges, 2, [])';
             end
         end
     end
@@ -752,7 +752,7 @@ function p = convertMaskToPolygon(mask)
     % This function is available from the Mathworks File Exchange:
     % https://www.mathworks.com/matlabcentral/fileexchange/45980-mask2poly-mask
     try
-        p = mask22poly(M');
+        p = mask2poly(M');
     catch ME
         if strcmp(ME.identifier, 'MATLAB:UndefinedFunction')
             error('Function mask2poly is missing. This can be installed from the Mathworks File Exchange (<a href="https://www.mathworks.com/matlabcentral/fileexchange/45980-mask2poly-mask">here</a>)')
