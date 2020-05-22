@@ -181,53 +181,10 @@ end
 
 schooli = 1;
 for i=1:nsI
+    clear sch
     % The boundary
-    %        D.snap.regionInterpretation.schoolInterpretation.schoolRep{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID
-    if isfield(s{i},'speciesInterpretationRoot') && isfield(s{i}.speciesInterpretationRoot,'speciesInterpretationRep')
-        % Need to implement more than one region for this one...
-        nfreq=length(s{i}.speciesInterpretationRoot.speciesInterpretationRep);
-        
-        if nfreq==1 % One frequency
-            if length(s{i}.speciesInterpretationRoot.speciesInterpretationRep.species)==1
-                % One species ID for this school (one freq)
-                school(schooli).channel(1).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID;
-                school(schooli).channel(1).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction;
-            else
-                % Several species ID for this school (one freq)
-                for sp=1:length(length(s{i}.speciesInterpretationRoot.speciesInterpretationRep.species))
-                    school(schooli).channel(1).species.speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species{sp}.Attributes.ID;
-                    school(schooli).channel(1).species.fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species{sp}.Attributes.fraction;
-                end
-            end
-            school(schooli).channel(1).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency;
-        else % Several frequencies
-            for fr = 1:nfreq
-                % Loop over channels (frequencies)
-                if ~isfield(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr},'species')
-%                    school(i).channel(fr).species(1).speciesID =  'NaN';
-%                    school(i).channel(fr).species(1).fraction =  NaN;
-                    school(schooli).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
-                elseif length(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species)==1
-                    % One Species ID for this school for this frequency (several freq)
-                    school(schooli).channel(fr).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
-                    school(schooli).channel(fr).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
-                    school(schooli).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
-                else
-                    % If there are several species per school box
-                    for sp=1:length(length(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species))
-                        school(schooli).channel(fr).species(sp).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species{sp}.Attributes.ID;
-                        school(schooli).channel(fr).species(sp).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species{sp}.Attributes.fraction;
-                    end
-                    school(i).channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
-                end
-            end
-        end
-        
-        % TODO: sum up and allocate to rest ID if applicable
-    end
-    
     if strcmp(schoolFormatType, 'maskRep')
-        clear topBoundary bottomBoundary pingNum
+        clear topBoundary bottomBoundary pingNum maskSectionUpper maskSectionLower
         if isfield(s{i}, 'pingMask')
             for j = 1:length(s{i}.pingMask)
                 if length(s{i}.pingMask)==1
@@ -238,26 +195,86 @@ for i=1:nsI
                     ping = str2num(s{i}.pingMask{j}.Attributes.relativePingNumber);
                 end
                 dum = str2num(strrep(T,newline,' '));
-                topBoundary(j) = dum(1);
-                bottomBoundary(j) = dum(2);
-                pingNum(j) = ping;
+                maskSectionUpper{j} = dum(1:2:end);
+                maskSectionLower{j} = dum(2:2:end);
+                pingNum(j) = ping + 1; % work files are zero-indexed, so convert to 1-indexed for Matlab
             end
-            school(schooli).x = [pingNum flip(pingNum)]+1; % +1 needed to align schools with regions
-            school(schooli).y = [topBoundary flip(bottomBoundary)];
-            school(schooli).regiontype = 'school';
-            school(schooli).maskPingNum = pingNum + 1;
-            school(schooli).maskTopBoundary = topBoundary;
-            school(schooli).maskBottomBoundary = bottomBoundary;
-            school(schooli).note = 'The mask* fields describe the same school as the .x, .y polygon format, but in a mask format.';
+            %school(schooli).x = [pingNum flip(pingNum)]+1; % +1 needed to align schools with regions
+            %school(schooli).y = [topBoundary flip(bottomBoundary)];
+            clear sch
+            sch.regiontype = 'school';
+            sch.maskPingNum = pingNum; 
+            sch.maskSectionUpper = maskSectionUpper;
+            sch.maskSectionLower = maskSectionLower;
+            sch.note = 'The mask* fields describe the same school as the .x, .y polygon format, but in a mask format.';
+            % This may return multiple polygonss (a single mask in LSSS can
+            % actually be several separate enclosed polygons).
+            p = convertMaskToPolygon(sch);
         end
     elseif strcmp(schoolFormatType, 'rep')
         T = s{i}.boundaryPoints.Text;
         dum = str2num(strrep(T,newline,' '));
-        school(schooli).x = dum(1:2:end-1);
-        school(schooli).y = dum(2:2:end);
-        school(schooli).regiontype = 'school';
+        p = struct('X', dum(1:2:end-1), 'Y', dum(2:2:end));
+        sch.regiontype = 'school';
     end
-    schooli = schooli + 1;
+    
+    if isfield(s{i},'speciesInterpretationRoot') && isfield(s{i}.speciesInterpretationRoot,'speciesInterpretationRep')
+        % Need to implement more than one region for this one...
+        nfreq=length(s{i}.speciesInterpretationRoot.speciesInterpretationRep);
+        
+        if nfreq==1 % One frequency
+            if length(s{i}.speciesInterpretationRoot.speciesInterpretationRep.species)==1
+                % One species ID for this school (one freq)
+                sch.channel(1).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.ID;
+                sch.channel(1).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species.Attributes.fraction;
+            else
+                % Several species ID for this school (one freq)
+                for sp=1:length(length(s{i}.speciesInterpretationRoot.speciesInterpretationRep.species))
+                    sch.channel(1).species.speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species{sp}.Attributes.ID;
+                    sch.channel(1).species.fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep.species{sp}.Attributes.fraction;
+                end
+            end
+            sch.channel(1).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep.Attributes.frequency;
+        else % Several frequencies
+            for fr = 1:nfreq
+                % Loop over channels (frequencies)
+                if ~isfield(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr},'species')
+                    sch.channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+                elseif length(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species)==1
+                    % One Species ID for this school for this frequency (several freq)
+                    sch.channel(fr).species(1).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.ID;
+                    sch.channel(fr).species(1).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species.Attributes.fraction;
+                    sch.channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+                else
+                    % If there are several species per school box
+                    for sp=1:length(length(s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species))
+                        sch.channel(fr).species(sp).speciesID =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species{sp}.Attributes.ID;
+                        sch.channel(fr).species(sp).fraction =  s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.species{sp}.Attributes.fraction;
+                    end
+                    sch.channel(fr).frequency = s{i}.speciesInterpretationRoot.speciesInterpretationRep{fr}.Attributes.frequency;
+                end
+            end
+        end
+        
+        % TODO: sum up and allocate to rest ID if applicable
+    else
+        sch.channel = [];
+    end
+    
+    % now aggregate into the school structure, repeating the metadata for
+    % when there are multiple polygons per LSSS school.
+    for j = 1:length(p)
+        sch.x = p(j).X;
+        sch.y = p(j).Y;
+        if schooli == 1
+            school = sch;
+        else
+            school(schooli) = sch;
+        end
+        schooli = schooli + 1;
+    end
+
+
 end
 
 %% Get the layerInterpretation.boundaries.verticalBoundary(ies)
@@ -696,4 +713,84 @@ if hasAttributes(theNode)
         attributes.(attr_name) = str((k(1)+2):(end-1));
     end
 end
+end
+
+% convert LSSS masks into polygons, including concave parts. Future
+% enhancement could be to support holes.
+
+function p = convertMaskToPolygon(mask)
+    % LSSS files contain compressed masks (start and stop ranges of the
+    % mask for each ping). Convert that to a binary mask and then use a
+    % found function to do the conversion to a polygon.
+    
+    if isempty(mask)
+        p = struct([]);
+        return
+    end
+
+    % make up the default mask
+    resolution = 0.1; % [m]
+    maxRange = max([mask.maskSectionLower{:}]); % [m] 
+    minRange = min([mask.maskSectionUpper{:}]); % [m] could use this to reduce size of M...
+    M = false(length(mask.maskPingNum), ceil(maxRange / resolution));
+
+    for i = 1:length(mask.maskPingNum)
+        for j = 1:length(mask.maskSectionUpper{i})
+            start = floor(mask.maskSectionUpper{i}(j)/resolution);
+            stop = floor(mask.maskSectionLower{i}(j)/resolution);
+            if start < 1
+                start = 1;
+            end
+            if stop > maxRange / resolution
+                stop = maxRange / resolution;
+            end
+            
+            M(i, start:stop) = true;
+        end
+    end
+    
+    % This function is available from the Mathworks File Exchange:
+    % https://www.mathworks.com/matlabcentral/fileexchange/45980-mask2poly-mask
+    try
+        p = mask22poly(M');
+    catch ME
+        if strcmp(ME.identifier, 'MATLAB:UndefinedFunction')
+            error('Function mask2poly is missing. This can be installed from the Mathworks File Exchange (<a href="https://www.mathworks.com/matlabcentral/fileexchange/45980-mask2poly-mask">here</a>)')
+        end
+        rethrow(ME)
+    end
+    
+    % ignore holes for the moment - should really split surrounding
+    % polygons into two and include the holes (which won't be holes
+    % anymore).
+    
+    % Fix some edge cases.
+    for i = 1:length(p)
+        % mask2poly produces a triangular region when a mask is one ping
+        % wide, so detect and fix that.
+       if p(i).Length == 3 && range(p(i).X) == 0
+           p(i).X(end+1) = p(i).X(end);
+           p(i).Y = [min(p(i).Y) max(p(i).Y) max(p(i).Y) min(p(i).Y)];
+           p(i).Length = 4;
+       end
+       % and we get a region with only two points with a one-ping-wide
+       % region that is at the end of the data
+       if p(i).Length == 2 && range(p(i).X) == 0
+          p(i).X = ones(1,4) * p(1).X(1);  
+          p(i).Y = [min(p(i).Y) max(p(i).Y) max(p(i).Y) min(p(i).Y)];
+          p(i).Length = 4;
+       end
+       
+       %if ee(i).isFilled % not a hole
+       %    e(j) = ee(i);
+       %    j = j + 1;
+       %end
+    end
+    
+    % and make polygons in the form that the rest of the code expects
+    for i = 1:length(p)
+        p(i).X = p(i).X - 1 + mask.maskPingNum(1);
+        p(i).Y = p(i).Y * resolution;
+    end
+
 end
