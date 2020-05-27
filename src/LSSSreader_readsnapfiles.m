@@ -749,15 +749,27 @@ function p = convertMaskToPolygon(mask)
         end
     end
     
-    % This function is available from the Mathworks File Exchange:
-    % https://www.mathworks.com/matlabcentral/fileexchange/45980-mask2poly-mask
-    try
-        p = mask2poly(M');
-    catch ME
-        if strcmp(ME.identifier, 'MATLAB:UndefinedFunction')
-            error('Function mask2poly is missing. This can be installed from the Mathworks File Exchange (<a href="https://www.mathworks.com/matlabcentral/fileexchange/45980-mask2poly-mask">here</a>)')
+    % If the mask is just one ping wide, mask2poly doesn't work, so do it
+    % manually
+    if length(mask.maskPingNum) == 1
+        clear p
+        for i = 1:length(mask.maskSectionUpper)
+            
+            p(i) = struct('Length', 2, ...
+                'X', [mask.maskPingNum mask.maskPingNum], ...
+                'Y', [mask.maskSectionUpper{i} mask.maskSectionLower{i}]);  
         end
-        rethrow(ME)
+    else    
+        % This function is available from the Mathworks File Exchange:
+        % https://www.mathworks.com/matlabcentral/fileexchange/45980-mask2poly-mask
+        try
+            p = mask2poly(M');
+        catch ME
+            if strcmp(ME.identifier, 'MATLAB:UndefinedFunction')
+                error('Function mask2poly is missing. This can be installed from the Mathworks File Exchange (<a href="https://www.mathworks.com/matlabcentral/fileexchange/45980-mask2poly-mask">here</a>)')
+            end
+            rethrow(ME)
+        end
     end
     
     % ignore holes for the moment - should really split surrounding
@@ -776,7 +788,7 @@ function p = convertMaskToPolygon(mask)
        % and we get a region with only two points with a one-ping-wide
        % region that is at the end of the data
        if p(i).Length == 2 && range(p(i).X) == 0
-          p(i).X = ones(1,4) * p(1).X(1);  
+          p(i).X = ones(1,4) * p(i).X(1);  
           p(i).Y = [min(p(i).Y) max(p(i).Y) max(p(i).Y) min(p(i).Y)];
           p(i).Length = 4;
        end
@@ -791,6 +803,9 @@ function p = convertMaskToPolygon(mask)
     for i = 1:length(p)
         p(i).X = p(i).X - 1 + mask.maskPingNum(1);
         p(i).Y = p(i).Y * resolution;
+        % Need to add mask info, modified if necessary (when multiple regions
+        % are produced per single LSSS region) in here.
+        
     end
 
 end
