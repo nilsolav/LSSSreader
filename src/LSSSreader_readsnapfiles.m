@@ -210,12 +210,19 @@ for i=1:nsI
             % This may return multiple polygonss (a single mask in LSSS can
             % actually be several separate enclosed polygons).
             p = convertMaskToPolygon(sch);
+        else % if there is no pingMask data in here, set up to ignore this region
+            p = struct([]);
         end
     elseif strcmp(schoolFormatType, 'rep')
         T = s{i}.boundaryPoints.Text;
         dum = str2num(strrep(T,newline,' '));
         p = struct('X', dum(1:2:end-1), 'Y', dum(2:2:end));
         sch.regiontype = 'school';
+    elseif isempty(schoolFormatType)
+        % no school data, so set up to ignore this region.
+        p = struct([]);
+    else
+        warning(['Unknown school representation type: ' schoolFormatType])
     end
     
     if isfield(s{i},'speciesInterpretationRoot') && isfield(s{i}.speciesInterpretationRoot,'speciesInterpretationRep')
