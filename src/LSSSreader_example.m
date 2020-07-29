@@ -1,21 +1,29 @@
 %% Initialize
 
-% Path to the example data
-whr = which('LSSSreader_readsnapfiles');
-[dr,~,~] = fileparts(whr);
-dr = dr(1:end-3);
+% The example work files can be found at:
+% https://github.com/nilsolav/LSSS-label-versioning
+% git clone https://github.com/nilsolav/LSSS-label-versioning
+%
+% The .raw (and bot/idx) files needs to be copied manually from here:
+% /nfs/delphi/431-Obsmet/nilsolav_scratch/LSSS-label-versioning (Linux) or
+% /scratch/nilsolav/LSSS-label-versioning/ (Pallas) or
+% \\delphi\felles\431-Obsmet\nilsolav_scratch\LSSS-label-versioning (windows)
 
-% Recursively list relevant data in the example directory. This can also be
-% used to search files in any folder structure
-files.snap = rdir(fullfile(dr,'exampledata','**','*.snap'));
-files.work = rdir(fullfile(dr,'exampledata','**','*.work'));
-files.raw = rdir(fullfile(dr,'exampledata','**','*.raw'));
+dr = 'D:\DATA\LSSS-label-versioning';
+if ~exist(dr,'dir') %Previous version had the example files bundled with the reader
+    whr = which('LSSSreader_readsnapfiles');
+    [dr,~,~] = fileparts(whr);
+    dr = dr(1:end-3);
+end
+
+files.snap = rdir(fullfile(dr,'**','*.snap'));
+files.work = rdir(fullfile(dr,'**','*.work'));
+files.raw = rdir(fullfile(dr,'**','*.raw'));
 
 % Match the corresponding snap, work and raw files (by file name)
 files=LSSSreader_pairfiles(files);
 
 %% Run the example data
-
 
 pl = true; % Set to false for plotting the masks only (without background echograms)
 %pl = false;
